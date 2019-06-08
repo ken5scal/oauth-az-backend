@@ -1,4 +1,4 @@
-package main // import "github.com/you/hello"
+package main
 
 import (
 	"fmt"
@@ -43,4 +43,5 @@ func main() {
 		Handler: handlers.CORS(allowedOrigins, allowedHeaders, allowedMethods)(r),
 	}
 	log.Fatal(srv.ListenAndServe())
+
 }
