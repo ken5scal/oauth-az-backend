@@ -2,14 +2,14 @@ package main // import "github.com/you/hello"
 
 import (
 	"fmt"
+	"github.com/gorilla/handlers"
+	"github.com/gorilla/mux"
+	"github.com/pelletier/go-toml"
 	"golang.org/x/oauth2"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"strconv"
-	"github.com/pelletier/go-toml"
-	"github.com/gorilla/handlers"
-	"github.com/gorilla/mux"
 )
 
 var oauthConfig oauth2.Config
@@ -36,5 +36,11 @@ func main() {
 	// Options is for CORS preflight
 	allowedMethods := handlers.AllowedMethods([]string{http.MethodOptions, http.MethodGet, http.MethodPost})
 
-	fmt.Println("hoge")
+	r := mux.NewRouter()
+	//r.HandleFunc("/hoge", fuga)
+	srv := &http.Server {
+		Addr: "localhost:" + port,
+		Handler: handlers.CORS(allowedOrigins, allowedHeaders, allowedMethods)(r),
+	}
+	log.Fatal(srv.ListenAndServe())
 }
