@@ -25,3 +25,8 @@ One can customize parameters by adding `--build-args` in docker build command
 % vgo build
 % vgo mod tidy
 ```
+
+# ToDo
+* [ ] Implement OAuth
+* [ ] Makefile
+* [ ] Separate debug/prod envs
