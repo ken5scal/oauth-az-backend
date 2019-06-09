@@ -1,13 +1,16 @@
-ARG GO_VERSION=1.12
-ARG ALPINE_VERSION=3.9
-ARG PORT=8080
-ARG ENV="debug"
-
 # This file is inspired from following articles
 # https://medium.com/@pierreprinetti/the-go-1-11-dockerfile-a3218319d191
 # https://qiita.com/takasp/items/c6288d4836e79801bb19#dockerfile-1
 # https://qiita.com/theoden9014/items/92c598d6662bd6c6b194
+# https://qiita.com/theoden9014/items/92c598d6662bd6c6b194
 
+ARG GO_VERSION=1.12
+ARG ALPINE_VERSION=3.9
+
+# -------------------------------------------------------
+# ------------- Stage where building go app -------------
+# -------------------------------------------------------
+# docker build -f Dockerfile -t oauth-az-back-build --target builder .
 FROM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS builder
 MAINTAINER Kengo Suzuki <kengoscal@gmail.com>
 
@@ -27,23 +30,32 @@ ENV GO111MODULE=on
 COPY go.mod go.sum ./
 RUN go mod download
 
+# Reading Dependency file
+COPY config.toml /etc/oauth-az/
+
 # By separating code copying from dependency-related files,
 # build steps can be cached.
 COPY . .
 ENV CGO_ENABLED=0 GOOS=linux
 RUN go build -ldflags="-w -s" -o /go/bin/app
 
-## Runtime Library
+# ------------------------------------------------------
+# ------------- Stage where running go app -------------
+# ------------------------------------------------------
+# % docker build -f Dockerfile --build-arg PORT=8888 -t oauth-az-back-dev .
 FROM scratch
 
-COPY --from=builder /etc/passwd /etc/passwd
-COPY --from=builder /etc/group /etc/group
+COPY --from=builder /etc/group /etc/passwd /etc/
+COPY --from=builder /etc/oauth-az /etc/oauth-az
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY --from=builder /go/bin/app /go/bin/app
 
-ENV PORT ${PORT}
-ENV ENVIRONMENT ${ENV}
+ARG PORT=8080
+
+ENV PORT=${PORT}
+ENV ADDR="0.0.0.0"
+
 EXPOSE ${PORT}
 
 USER app-go
-ENTRYPOINT ["/go/bin/app"]
+ENTRYPOINT ["/go/bin/app", "/etc/oauth-az/config.toml"]

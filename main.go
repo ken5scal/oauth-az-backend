@@ -9,14 +9,22 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 )
 
 var oauthConfig oauth2.Config
-var port string
+var port = "8080"
+var debug = true
+var addr = "localhost"
+var configFileLocation = "config.toml"
 
 func init() {
-	tomlInBytes, err := ioutil.ReadFile("config.toml")
+	if len(os.Args) > 1 && os.Args[1] != "" {
+		configFileLocation = os.Args[1]
+	}
+
+	tomlInBytes, err := ioutil.ReadFile(configFileLocation)
 	if err != nil {
 		log.Fatal(fmt.Sprintf("failed reading a toml file: %v", err.Error()))
 	}
@@ -26,7 +34,31 @@ func init() {
 		log.Fatal(fmt.Sprintf("failed parsing a toml file: %v", err.Error()))
 	}
 
-	port = strconv.FormatInt(config.Get("port").(int64), 10)
+	// Following configs read params from Environment Vars & Config File
+	// Environment Vars are prioritized because
+	// Dockerfile uses and set those variables as Environment Vars
+	if os.Getenv("PORT") != "" {
+		port = os.Getenv("PORT")
+	} else if config.Get("port") != nil {
+		port = strconv.FormatInt(config.Get("port").(int64), 10)
+	}
+
+	if os.Getenv("ADDR") != "" {
+		addr = os.Getenv("ADDR")
+	} else if config.Get("ADDR") != nil {
+		addr = config.Get("ADDR").(string)
+	}
+
+	// Following params prioritize the config file
+	// because they are the app settings
+	if config.Get("debug") != nil {
+		debug = config.Get("debug").(bool)
+	} else if os.Getenv("debug") != "" {
+		debug, err = strconv.ParseBool(os.Getenv("debug"))
+		if err != nil {
+			log.Fatal(fmt.Sprintf("failed parsing env var: %v", err.Error()))
+		}
+	}
 }
 
 func main() {
@@ -37,10 +69,14 @@ func main() {
 	allowedMethods := handlers.AllowedMethods([]string{http.MethodOptions, http.MethodGet, http.MethodPost})
 
 	r := mux.NewRouter()
-	//r.HandleFunc("/hoge", fuga)
+	r.HandleFunc("/", fuga)
 	srv := &http.Server{
-		Addr:    "localhost:" + port,
+		Addr:    addr + ":" + port,
 		Handler: handlers.CORS(allowedOrigins, allowedHeaders, allowedMethods)(r),
 	}
 	log.Fatal(srv.ListenAndServe())
+}
+
+func fuga(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprint(w, "fuga")
 }
