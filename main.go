@@ -38,8 +38,8 @@ func main() {
 
 	r := mux.NewRouter()
 	//r.HandleFunc("/hoge", fuga)
-	srv := &http.Server {
-		Addr: "localhost:" + port,
+	srv := &http.Server{
+		Addr:    "localhost:" + port,
 		Handler: handlers.CORS(allowedOrigins, allowedHeaders, allowedMethods)(r),
 	}
 	log.Fatal(srv.ListenAndServe())
