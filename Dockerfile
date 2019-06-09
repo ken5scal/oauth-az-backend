@@ -2,6 +2,11 @@ ARG GO_VERSION=1.12
 ARG ALPINE_VERSION=3.9
 ARG PORT=8080
 
+# This file is inspired from following articles
+# https://medium.com/@pierreprinetti/the-go-1-11-dockerfile-a3218319d191
+# https://qiita.com/takasp/items/c6288d4836e79801bb19#dockerfile-1
+# https://qiita.com/theoden9014/items/92c598d6662bd6c6b194
+
 FROM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS builder
 MAINTAINER Kengo Suzuki <kengoscal@gmail.com>
 
