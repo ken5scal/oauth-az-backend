@@ -42,20 +42,13 @@ RUN go build -ldflags="-w -s" -o /go/bin/app
 # ------------------------------------------------------
 # ------------- Stage where running go app -------------
 # ------------------------------------------------------
-# % docker build -f Dockerfile --build-arg PORT=8888 -t oauth-az-back-dev .
+# % docker build -f Dockerfile --build-arg ENV=debug -t oauth-az-back-dev .
 FROM scratch
 
 COPY --from=builder /etc/group /etc/passwd /etc/
 COPY --from=builder /etc/oauth-az /etc/oauth-az
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY --from=builder /go/bin/app /go/bin/app
-
-ARG PORT=8080
-
-ENV PORT=${PORT}
-ENV ADDR="0.0.0.0"
-
-EXPOSE ${PORT}
 
 USER app-go
 ENTRYPOINT ["/go/bin/app", "/etc/oauth-az/config.toml"]

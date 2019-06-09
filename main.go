@@ -34,26 +34,17 @@ func init() {
 		log.Fatal(fmt.Sprintf("failed parsing a toml file: %v", err.Error()))
 	}
 
-	// Following configs read params from Environment Vars & Config File
-	// Environment Vars are prioritized because
-	// Dockerfile uses and set those variables as Environment Vars
-	if os.Getenv("PORT") != "" {
-		port = os.Getenv("PORT")
-	} else if config.Get("port") != nil {
+	if config.Get("port") != nil {
 		port = strconv.FormatInt(config.Get("port").(int64), 10)
 	}
 
-	if os.Getenv("ADDR") != "" {
-		addr = os.Getenv("ADDR")
-	} else if config.Get("ADDR") != nil {
-		addr = config.Get("ADDR").(string)
+	if config.Get("addr") != nil {
+		addr = config.Get("addr").(string)
 	}
 
-	// Following params prioritize the config file
-	// because they are the app settings
 	if config.Get("debug") != nil {
 		debug = config.Get("debug").(bool)
-	} else if os.Getenv("debug") != "" {
+	} else if os.Getenv("DEBUG") != "" {
 		debug, err = strconv.ParseBool(os.Getenv("debug"))
 		if err != nil {
 			log.Fatal(fmt.Sprintf("failed parsing env var: %v", err.Error()))
