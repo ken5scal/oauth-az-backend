@@ -43,5 +43,4 @@ func main() {
 		Handler: handlers.CORS(allowedOrigins, allowedHeaders, allowedMethods)(r),
 	}
 	log.Fatal(srv.ListenAndServe())
-
 }
