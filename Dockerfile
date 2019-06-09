@@ -1,6 +1,7 @@
 ARG GO_VERSION=1.12
 ARG ALPINE_VERSION=3.9
 ARG PORT=8080
+ARG ENV="debug"
 
 # This file is inspired from following articles
 # https://medium.com/@pierreprinetti/the-go-1-11-dockerfile-a3218319d191
@@ -41,7 +42,7 @@ COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certifi
 COPY --from=builder /go/bin/app /go/bin/app
 
 ENV PORT ${PORT}
-ENV ENVIRONMENT "debug"
+ENV ENVIRONMENT ${ENV}
 EXPOSE ${PORT}
 
 USER app-go
