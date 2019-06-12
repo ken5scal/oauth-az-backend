@@ -1,9 +1,22 @@
 package main
 
-type Client struct {
-	ID         string
-	Secret     string
-	ClientType ClientType
+import "github.com/google/uuid"
+
+type client struct {
+	ID           string
+	Secrets      []string
+	RedirectUris []string
+	ClientType   ClientType
+}
+
+func ClientBuilder() client {
+	return client{
+		ID: uuid.New().String(),
+	}
+}
+
+func (c *client) GenerateSecret() {
+	c.Secrets = append(c.Secrets, uuid.New().String())
 }
 
 // ClientType is the OAuth client types
