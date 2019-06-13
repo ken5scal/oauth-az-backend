@@ -1,12 +1,15 @@
 package main
 
-import "github.com/google/uuid"
+import (
+	"github.com/google/uuid"
+)
 
 type client struct {
 	ID           string
 	Secrets      []string
 	RedirectUris []string
 	ClientType   ClientType
+	ClientStatus string
 }
 
 func ClientBuilder() client {
