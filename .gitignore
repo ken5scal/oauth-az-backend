@@ -12,3 +12,7 @@
 *.out
 
 .idea/*
+
+# Local DB Settings
+db/*
+!db/config
