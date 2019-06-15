@@ -9,17 +9,24 @@ type client struct {
 	Secrets      []string
 	RedirectUris []string
 	ClientType   ClientType
-	ClientStatus string
+	ClientStatus ClientStatus // manage
+	// RP status
+	AuthzRevision int
 }
 
 func ClientBuilder() client {
 	return client{
-		ID: uuid.New().String(),
+		ID:            uuid.New().String(),
+		AuthzRevision: 1,
 	}
 }
 
 func (c *client) GenerateSecret() {
 	c.Secrets = append(c.Secrets, uuid.New().String())
+}
+
+func (c *client) CopyAuthzRevision() int {
+	return c.AuthzRevision
 }
 
 // ClientType is the OAuth client types
@@ -36,4 +43,20 @@ func (c ClientType) String() string {
 		return "undefined client"
 	}
 	return c.value
+}
+
+type ClientStatus struct {
+	status string
+}
+
+var Developing = ClientType{"developing"}
+var Published = ClientType{"published"}
+var Suspended = ClientType{"suspended"}
+var Deleted = ClientType{"deleted"}
+
+func (c ClientStatus) String() string {
+	if c.status == "" {
+		return "developing"
+	}
+	return c.status
 }
