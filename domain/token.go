@@ -6,8 +6,13 @@ type Token struct {
 	authZInfo string
 }
 
+// I think they are business logic...
 type ReturningToken struct {
-	name string
+}
+
+// I think they are business logic...
+func (t *ReturningToken) Name() string {
+	return ""
 }
 
 // I think they are business logic...
@@ -30,4 +35,8 @@ type TokenRepository interface {
 	Insert(t *Token) error
 	Update(t *Token) error
 	Delete(t *Token) error
+}
+
+type ReturningTokenService interface {
+	GetReturnedName() string
 }

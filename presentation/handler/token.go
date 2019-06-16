@@ -22,7 +22,7 @@ func (c *tokenHandler) RequestToken(w http.ResponseWriter, r *http.Request) {
 	// TODO Write to w
 	fmt.Println(token)
 	fmt.Println(err)
-	ResponseRequestToken(w, token)
+	ResponseRequestToken(w, c.tokenService.GetReturnedName())
 }
 
 func ResponseRequestToken(w http.ResponseWriter, name string) {

@@ -24,6 +24,10 @@ func (t *TokenServiceImpl) GetTokenByID(tokenID string) (*domain.ReturningToken,
 	return domain.ReturnToken(hoge), err
 }
 
+func (t *TokenServiceImpl) GetReturnedName() string {
+	return ""
+}
+
 func (t *TokenServiceImpl) GenerateToken(authZInfor string) (*domain.ReturningToken, error) {
 	// Put Business Logic
 	// Check Business logics
