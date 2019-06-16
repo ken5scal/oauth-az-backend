@@ -1,9 +1,13 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/ken5scal/oauth-az/application"
+	"github.com/ken5scal/oauth-az/infrastructure"
+	"github.com/ken5scal/oauth-az/presentation/handler"
 	"github.com/pelletier/go-toml"
 	"golang.org/x/oauth2"
 	"io/ioutil"
@@ -53,6 +57,11 @@ func init() {
 }
 
 func main() {
+	cnn, _ := sql.Open("mysql", "dataSourceName")
+	repo := infrastructure.NewTokenRepository(cnn)
+	service := application.NewService(repo)
+	ctrl := handler.NewHandler(service)
+
 	// assuming administrative requests from frontend
 	allowedOrigins := handlers.AllowedOrigins([]string{"http://localhost:3000"})
 	allowedHeaders := handlers.AllowedHeaders([]string{"Content-Type"})
@@ -61,6 +70,7 @@ func main() {
 
 	r := mux.NewRouter()
 	r.HandleFunc("/", fuga)
+	r.HandleFunc("/hoge", ctrl.RequestToken)
 	srv := &http.Server{
 		Addr:    addr + ":" + port,
 		Handler: handlers.CORS(allowedOrigins, allowedHeaders, allowedMethods)(r),

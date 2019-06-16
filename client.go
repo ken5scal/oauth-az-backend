@@ -10,6 +10,7 @@ type client struct {
 	RedirectUris []string
 	ClientType   ClientType
 	ClientStatus ClientStatus // manage
+
 	// RP status
 	AuthzRevision int
 }
