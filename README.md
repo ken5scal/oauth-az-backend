@@ -4,6 +4,8 @@
 
 This repository is preferring `Layered Architecture` over `Flat Package Archtecture`, which many Go projects employ, for the following reasons.
 
+`Though, I started thinking OAuth AS does not really have domain layaer...`
+
 ## Easy to continue 
 I build this for free time meaning there are times I cannot commit on this.
 Layered architecture makes me easy to comeback because it defines specific responsibilities for each layer.

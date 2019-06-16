@@ -22,4 +22,9 @@ func (c *tokenHandler) RequestToken(w http.ResponseWriter, r *http.Request) {
 	// TODO Write to w
 	fmt.Println(token)
 	fmt.Println(err)
+	ResponseRequestToken(w, token)
+}
+
+func ResponseRequestToken(w http.ResponseWriter, name string) {
+	fmt.Fprint(w, name)
 }

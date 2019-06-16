@@ -7,16 +7,20 @@ type Token struct {
 }
 
 type ReturningToken struct {
+	name string
 }
 
+// I think they are business logic...
 func (t *Token) isRevoked() bool {
 	return false
 }
 
+// I think they are business logic...
 func (t *Token) FindClientID() int {
 	return 0
 }
 
+// I think they are business logic...
 func ReturnToken(t *Token) *ReturningToken {
 	return nil
 }
