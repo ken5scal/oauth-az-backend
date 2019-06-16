@@ -1,7 +1,9 @@
 package application
 
 import (
+	"errors"
 	"github.com/ken5scal/oauth-az/domain"
+	"github.com/ken5scal/oauth-az/infrastructure"
 )
 
 // this will have business logic
@@ -32,7 +34,21 @@ func (t *TokenServiceImpl) GenerateToken(authZInfor string) (*domain.ReturningTo
 	// Put Business Logic
 	// Check Business logics
 	// Insert to db
+
+	r, ok := t.repo.(*infrastructure.TokenRepositoryImpl)
+	if !ok {
+		return nil, errors.New("TokenRepositoryImpl does not implement TokenRepository")
+	}
+	r.BeginTransaction()
+
 	token := &domain.Token{authZInfor}
 	err := t.repo.Insert(token)
+
+	if err != nil {
+		r.Rollback()
+		return nil, err
+	}
+	r.Commit()
+
 	return domain.ReturnToken(token), err
 }

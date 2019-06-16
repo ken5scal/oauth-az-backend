@@ -5,29 +5,47 @@ import (
 	"github.com/ken5scal/oauth-az/domain"
 )
 
-type tokenRepositoryImpl struct {
+type TokenRepositoryImpl struct {
 	db *sql.DB
+	tx *sql.Tx
 }
 
-func NewTokenRepository(db *sql.DB) domain.TokenRepository {
-	return &tokenRepositoryImpl{
+func NewTokenRepository(db *sql.DB) *TokenRepositoryImpl {
+	return &TokenRepositoryImpl{
 		db: db,
 	}
 }
 
-func (t *tokenRepositoryImpl) GetByID(tokenID string) (*domain.Token, error) {
+func (t *TokenRepositoryImpl) GetByID(tokenID string) (*domain.Token, error) {
 	return nil, nil
 }
 
-func (t *tokenRepositoryImpl) Insert(token *domain.Token) error {
+func (t *TokenRepositoryImpl) Insert(token *domain.Token) error {
 	// Use ORM to insert
 	return nil
 }
 
-func (t *tokenRepositoryImpl) Update(token *domain.Token) error {
+func (t *TokenRepositoryImpl) Update(token *domain.Token) error {
 	return nil
 }
 
-func (t *tokenRepositoryImpl) Delete(token *domain.Token) error {
+func (t *TokenRepositoryImpl) Delete(token *domain.Token) error {
 	return nil
+}
+
+func (t *TokenRepositoryImpl) BeginTransaction() (*sql.Tx, error) {
+	if tx, err := t.db.Begin(); err != nil {
+		return nil, err
+	} else {
+		t.tx = tx
+		return tx, nil
+	}
+}
+
+func (t *TokenRepositoryImpl) Rollback() error {
+	return t.tx.Rollback()
+}
+
+func (t *TokenRepositoryImpl) Commit() error {
+	return t.tx.Commit()
 }
