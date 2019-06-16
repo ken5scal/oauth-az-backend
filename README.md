@@ -1,5 +1,22 @@
 # oauth-az-backend
 
+# Package Structure
+
+This repository is preferring `Layered Architecture` over `Flat Package Archtecture`, which many Go projects employ, for the following reasons.
+
+## Easy to continue 
+I build this for free time meaning there are times I cannot commit on this.
+Layered architecture makes me easy to comeback because it defines specific responsibilities for each layer.
+Maybe I can handle flat package architecture, but it requires me writing a clear and readable documents for me in the future.
+
+## Pre-requisites for Flat Package architecture
+Flat Package seems to require separating responsibility in each packages.
+But, that's what exactly layered architecture achieves. 
+Meaning flat package itself requires me well understanding the layered package.
+
+## Not OSS
+I'm committing this project not for OSS project; but more like for educational purpose.
+If this were an OSS project, flat package architecture is preferred for other contributors.
 
 # The Default Parameters
 
