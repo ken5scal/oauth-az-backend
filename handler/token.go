@@ -1,15 +1,42 @@
-package application
+package handler
+
+// Handles Business logics and Presentation
+// `handler` package handles business logic from
+// request and response.
+// Specifically following s
+// * works on  db transaction
+// * guarantees data integrity
 
 import (
 	"errors"
+	"fmt"
 	"github.com/ken5scal/oauth-az/domain"
 	"github.com/ken5scal/oauth-az/infrastructure"
+	"net/http"
 )
 
-// this will have business logic
-// * works on  db transaction
-// * guarantees data integrity
-// * presentation uses this
+type tokenHandler struct {
+	tokenService TokenServiceImpl
+}
+
+func NewHandler(s TokenServiceImpl) *tokenHandler {
+	return &tokenHandler{s}
+}
+
+func (c *tokenHandler) RequestToken(w http.ResponseWriter, r *http.Request) {
+	// TODO parse request and retrieve parameters
+	authzInfo := "" //For now
+	token, err := c.tokenService.GenerateToken(authzInfo)
+
+	// TODO Write to w
+	fmt.Println(token)
+	fmt.Println(err)
+	ResponseRequestToken(w, c.tokenService.GetReturnedName())
+}
+
+func ResponseRequestToken(w http.ResponseWriter, name string) {
+	fmt.Fprint(w, name)
+}
 
 type TokenServiceImpl struct {
 	repo domain.TokenRepository

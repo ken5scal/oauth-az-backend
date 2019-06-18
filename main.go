@@ -5,9 +5,8 @@ import (
 	"fmt"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-	"github.com/ken5scal/oauth-az/application"
+	"github.com/ken5scal/oauth-az/handler"
 	"github.com/ken5scal/oauth-az/infrastructure"
-	"github.com/ken5scal/oauth-az/presentation/handler"
 	"github.com/pelletier/go-toml"
 	"golang.org/x/oauth2"
 	"io/ioutil"
@@ -59,7 +58,7 @@ func init() {
 func main() {
 	cnn, _ := sql.Open("mysql", "dataSourceName")
 	repo := infrastructure.NewTokenRepository(cnn)
-	service := application.NewService(repo)
+	service := handler.NewService(repo)
 	ctrl := handler.NewHandler(service)
 
 	// assuming administrative requests from frontend
