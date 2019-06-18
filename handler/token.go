@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/ken5scal/oauth-az/domain"
+	"github.com/ken5scal/oauth-az/handler/response"
 	"github.com/ken5scal/oauth-az/infrastructure"
 	"net/http"
 )
@@ -31,11 +32,7 @@ func (c *tokenHandler) RequestToken(w http.ResponseWriter, r *http.Request) {
 	// TODO Write to w
 	fmt.Println(token)
 	fmt.Println(err)
-	ResponseRequestToken(w, c.tokenService.GetReturnedName())
-}
-
-func ResponseRequestToken(w http.ResponseWriter, name string) {
-	fmt.Fprint(w, name)
+	response.ResponseRequestToken(w, c.tokenService.GetReturnedName())
 }
 
 type TokenServiceImpl struct {

@@ -2,23 +2,27 @@
 
 # Package Structure
 
-This repository is preferring `Layered Architecture` over `Flat Package Archtecture`, which many Go projects employ, for the following reasons.
+This repository is constructed using Go's `Flat Package Architecture`.
 
-`Though, I started thinking OAuth AS does not really have domain layaer...`
+```
+├── domain
+│   └── token.go         // Domain logic (Model)
+├── go.mod
+├── go.sum
+├── handler        
+│   ├── response        // View Layer
+│   │   └── token.go
+│   └── token.go        // Business Logic
+├── infrastructure      // Tech Layer
+│   ├── in_memory_db.go
+│   └── rds.go
+└── main.go
+```
 
-## Easy to continue 
-I build this for free time meaning there are times I cannot commit on this.
-Layered architecture makes me easy to comeback because it defines specific responsibilities for each layer.
-Maybe I can handle flat package architecture, but it requires me writing a clear and readable documents for me in the future.
-
-## Pre-requisites for Flat Package architecture
-Flat Package seems to require separating responsibility in each packages.
-But, that's what exactly layered architecture achieves. 
-Meaning flat package itself requires me well understanding the layered package.
-
-## Not OSS
-I'm committing this project not for OSS project; but more like for educational purpose.
-If this were an OSS project, flat package architecture is preferred for other contributors.
+OAuth itself is a well-defined protocol.
+So the repository's `business logic` is not exactly the one like in normal web app.
+Rather, the OAuth itself should be one under business logic.
+But, since this repository is purpose for education, let's put OAuth logic under domain layer.  
 
 # The Default Parameters
 
