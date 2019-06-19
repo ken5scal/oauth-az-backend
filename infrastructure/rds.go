@@ -49,3 +49,15 @@ func (t *TokenRepositoryImpl) Rollback() error {
 func (t *TokenRepositoryImpl) Commit() error {
 	return t.tx.Commit()
 }
+
+type RDSAuthorzInfoRepositoryImpl struct {
+	db *sql.DB
+	tx *sql.Tx
+}
+
+//NewAuthzInfoRepository
+func NewRDSAuthzInfoRepositoryImpl(db *sql.DB) *RDSAuthorzInfoRepositoryImpl {
+	return &RDSAuthorzInfoRepositoryImpl{
+		db: db,
+	}
+}

@@ -1,5 +1,7 @@
 package domain
 
+import "time"
+
 // AuthorizationInfo is authorized info that RO granted to the RP
 // so this is tied to user
 // Save this on Redis/memchached, but also in long term DB
@@ -12,16 +14,25 @@ type AuthorizationInfo struct {
 	UserId          string
 	Scope           []string
 	RedirectUri     string
-	// Expires in 10 min: https://tools.ietf.org/html/rfc6749#section-4.1.2
-	AuthzCode     string // should be indexed in DB
-	RefreshToken  string // should be indexed in DB
-	AuthzRevision int
+	AuthzCode       string // should be indexed in DB
+	CodeExpiration  time.Time
+	RefreshToken    string // should be indexed in DB
+	AuthzRevision   int
 }
+
+// Authorization code expires in 10 min:
+// https://tools.ietf.org/html/rfc6749#section-4.1.2
+const codeExpirationDuration = 10
 
 func AuthorizationInfoBuilder(c *client) AuthorizationInfo {
 	return AuthorizationInfo{
-		AuthzRevision: c.AuthzRevision,
+		AuthzRevision:  c.AuthzRevision,
+		CodeExpiration: time.Now().Local().Add(time.Minute * time.Duration(codeExpirationDuration)),
 	}
+}
+
+func (a *AuthorizationInfo) isCodeValid() bool {
+	return time.Now().Local().Before(a.CodeExpiration)
 }
 
 // If Authorization Info does not exist, then the app sends an authorization request for the first time.
