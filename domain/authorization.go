@@ -1,8 +1,7 @@
-package main
+package domain
 
 // AuthorizationInfo is authorized info that RO granted to the RP
 // so this is tied to user
-// Create, Read, Update, Delete
 // Save this on Redis/memchached, but also in long term DB
 // because every authCode in token request are required to
 // be compared with past one
@@ -37,6 +36,13 @@ func (a *AuthorizationInfo) isConsentNeeded() bool {
 func (a *AuthorizationInfo) isRefreshTokenValid() bool {
 	return false
 	// check validity of Authorization Info
+}
+
+type AuthzInfoRepository interface {
+	GetAuthzInfoByID(authzInfoID string) (*AuthorizationInfo, error)
+	Insert(t *AuthorizationInfo) error
+	Update(t *AuthorizationInfo) error
+	Delete(t *AuthorizationInfo) error
 }
 
 // AccessTokenInfo is token issued based on AuthorizationInfo

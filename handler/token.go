@@ -46,7 +46,7 @@ func NewService(repository domain.TokenRepository) TokenServiceImpl {
 }
 
 func (t *TokenServiceImpl) GetTokenByID(tokenID string) (*domain.ReturningToken, error) {
-	hoge, err := t.repo.GetByID(tokenID)
+	hoge, err := t.repo.GetAccessTokenByID(tokenID)
 	return domain.ReturnToken(hoge), err
 }
 

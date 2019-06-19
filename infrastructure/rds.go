@@ -16,7 +16,7 @@ func NewTokenRepository(db *sql.DB) *TokenRepositoryImpl {
 	}
 }
 
-func (t *TokenRepositoryImpl) GetByID(tokenID string) (*domain.Token, error) {
+func (t *TokenRepositoryImpl) GetAccessTokenByID(tokenID string) (*domain.Token, error) {
 	return nil, nil
 }
 

@@ -31,7 +31,7 @@ func ReturnToken(t *Token) *ReturningToken {
 }
 
 type TokenRepository interface {
-	GetByID(tokenID string) (*Token, error)
+	GetAccessTokenByID(tokenID string) (*Token, error)
 	Insert(t *Token) error
 	Update(t *Token) error
 	Delete(t *Token) error
