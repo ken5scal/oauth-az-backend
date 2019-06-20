@@ -43,8 +43,8 @@ func TestAuthorizationInfo_isCodeValid(t *testing.T) {
 				RefreshToken:    tt.fields.RefreshToken,
 				AuthzRevision:   tt.fields.AuthzRevision,
 			}
-			if got := a.isCodeValid(); got != tt.want {
-				t.Errorf("AuthorizationInfo.isCodeValid() = %v, want %v", got, tt.want)
+			if got := a.isCodeUnExpired(); got != tt.want {
+				t.Errorf("AuthorizationInfo.isCodeExpired() = %v, want %v", got, tt.want)
 			}
 		})
 	}

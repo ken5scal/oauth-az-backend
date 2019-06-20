@@ -7,6 +7,9 @@ package handler
 // * works on  db transaction
 // * guarantees data integrity
 
+// IMPORTANT
+// put service layer (business logics) in domain layer
+
 import (
 	"errors"
 	"fmt"

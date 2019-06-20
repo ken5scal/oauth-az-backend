@@ -31,16 +31,16 @@ func AuthorizationInfoBuilder(c *client) AuthorizationInfo {
 	}
 }
 
-func (a *AuthorizationInfo) isCodeValid() bool {
+func (a *AuthorizationInfo) isCodeUnExpired() bool {
 	return time.Now().Local().Before(a.CodeExpiration)
 }
 
 // If Authorization Info does not exist, then the app sends an authorization request for the first time.
 // If scope is changed and more values are specified, needs to ask for new consent
-// If scope is decreased or unched, then't consent is not required
+// If scope is decreased or unchanged, then't consent is not required
 func (a *AuthorizationInfo) isConsentNeeded() bool {
 	return false
-	// if this is true, then AS needs considerring for
+	// if this is true, then AS needs considering for
 	// revoking access token, or refresh tokens
 }
 
@@ -50,6 +50,7 @@ func (a *AuthorizationInfo) isRefreshTokenValid() bool {
 }
 
 type AuthzInfoRepository interface {
+	GetAuthzInfoForAccessToken(clientID, userID string) (*AuthorizationInfo, error)
 	GetAuthzInfoByID(authzInfoID string) (*AuthorizationInfo, error)
 	Insert(t *AuthorizationInfo) error
 	Update(t *AuthorizationInfo) error
@@ -154,4 +155,8 @@ type UserInfo struct {
 
 func issueAccessToken() {
 
+}
+
+type AuthzInfoServiceImpl struct {
+	repo AuthzInfoRepository
 }

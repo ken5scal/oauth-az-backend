@@ -2,6 +2,7 @@ package infrastructure
 
 import (
 	"database/sql"
+	"github.com/go-redis/redis"
 	"github.com/ken5scal/oauth-az/domain"
 )
 
@@ -50,14 +51,15 @@ func (t *TokenRepositoryImpl) Commit() error {
 	return t.tx.Commit()
 }
 
-type RDSAuthorzInfoRepositoryImpl struct {
+type AuthorzInfoRepositoryImpl struct {
 	db *sql.DB
+	r  *redis.Conn // TODO 適当
 	tx *sql.Tx
 }
 
 //NewAuthzInfoRepository
-func NewRDSAuthzInfoRepositoryImpl(db *sql.DB) *RDSAuthorzInfoRepositoryImpl {
-	return &RDSAuthorzInfoRepositoryImpl{
+func NewAuthzInfoRepositoryImpl(db *sql.DB) *AuthorzInfoRepositoryImpl {
+	return &AuthorzInfoRepositoryImpl{
 		db: db,
 	}
 }
