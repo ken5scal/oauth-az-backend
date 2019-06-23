@@ -24,6 +24,14 @@ So the repository's `business logic` is not exactly the one like in normal web a
 Rather, the OAuth itself should be one under business logic.
 But, since this repository is purpose for education, let's put OAuth logic under domain layer.  
 
+# DB
+
+## Table Design (Conceptual Schema in Logical Definition)
+
+![](images/as-er-diragram.png)
+
+* ref: https://drive.google.com/file/d/1l2Ft-nnS4i0Ubtpf1wK3IfQBt2DyX9Ln/view?usp=sharing
+
 # The Default Parameters
 
 ## Server environment
