@@ -32,9 +32,10 @@ But, since this repository is purpose for education, let's put OAuth logic under
 
 * draw.io link: https://drive.google.com/file/d/1l2Ft-nnS4i0Ubtpf1wK3IfQBt2DyX9Ln/view?usp=sharing
 
-## Too
+## Tools
 
-This project uses [SQLBoiler](https://github.com/volatiletech/sqlboiler)
+* orm: [SQLBoiler](https://github.com/volatiletech/sqlboiler)
+* migration tool: [sql-migrate](https://github.com/rubenv/sql-migrate)
 
 # The Default Parameters
 
@@ -68,7 +69,7 @@ One can customize parameters by adding `--build-args` in docker build command
 % docker run --name mysql --restart always -v $(pwd)/db:/var/lib/mysql -v $(pwd)/db/config:/etc/mysql/conf.d -e MYSQL_ROOT_PASSWORD=password -p 3306:3306 -d mysql
 % docker exec -it mysql /bin/bash
 root@0caa697a9dcc:/# mysql -u root -p
-musql > CREATE USER 'oauth-as'@'localhost' IDENTIFIED BY 'random_password';
+musql > CREATE USER 'oauth-as'@'{YOUR HOST, eg: %, localhost}' IDENTIFIED BY '{RANDOM SECURE PASSWORD}';
 mysql > select User, Plugin from mysql.user;
 mysql > GRANT {YOUR Privilege, eg: ALL PRIVILEGES} ON database.table TO 'oauth-as'@'localhost';
 ```
