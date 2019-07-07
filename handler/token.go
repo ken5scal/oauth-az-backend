@@ -68,7 +68,7 @@ func (t *TokenServiceImpl) GenerateToken(authZInfor string) (*domain.ReturningTo
 	}
 	r.BeginTransaction()
 
-	token := &domain.Token{authZInfor}
+	token := domain.NewToken(authZInfor)
 	err := t.repo.Insert(token)
 
 	if err != nil {

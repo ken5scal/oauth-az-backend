@@ -1,9 +1,12 @@
 package domain
 
 // domain logic goes here
-
 type Token struct {
 	authZInfo string
+}
+
+func NewToken(authzInfo string) *Token {
+	return &Token{authZInfo: authzInfo}
 }
 
 // I think they are business logic...

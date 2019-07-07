@@ -20,7 +20,7 @@ var oauthConfig oauth2.Config
 var port = "8080"
 var debug = true
 var addr = "localhost"
-var configFileLocation = "my.cnf.toml"
+var configFileLocation = "config.toml"
 
 func init() {
 	if len(os.Args) > 1 && os.Args[1] != "" {
