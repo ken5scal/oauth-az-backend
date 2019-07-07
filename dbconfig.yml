@@ -1,6 +1,6 @@
 development:
   dialect: mysql
-  datasource: oauth-as:random_password@tcp(localhost:3306)/authz?parseTime=true #oauth-as.db?parseTime=true
+  datasource: db-maintainer:password@tcp(localhost:3306)/authz?parseTime=true #oauth-as.db?parseTime=true
   dir: migrations/mysql
   table: migrations
 
