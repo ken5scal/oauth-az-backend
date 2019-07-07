@@ -14,10 +14,14 @@ type AuthorizationInfo struct {
 	UserId          string
 	Scope           []string
 	RedirectUri     string
-	AuthzCode       string // should be indexed in DB
-	CodeExpiration  time.Time
-	RefreshToken    string // should be indexed in DB
-	AuthzRevision   int
+	// "minimum of 128 bits of entropy where the probability of an attacker guessing the generated token is less than or equal to 2^(-160) as per [RFC6749] section 10.10"
+	//  https://bitbucket.org/openid/fapi/pull-requests/45/bring-access-token-requirements-inline/diff
+	// calculated by https://8gwifi.org/passwdgen.jsp
+	// Don't use symboles, just numbers and letters from 22 ~ 26
+	AuthzCode      string // should be indexed in DB,
+	CodeExpiration time.Time
+	RefreshToken   string // should be indexed in DB
+	AuthzRevision  int
 }
 
 // Authorization code expires in 10 min:

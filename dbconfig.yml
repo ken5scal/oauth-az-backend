@@ -1,0 +1,11 @@
+development:
+  dialect: mysql
+  datasource: oauth-as:random_password@tcp(localhost:3306)/authz?parseTime=true #oauth-as.db?parseTime=true
+  dir: migrations/mysql
+  table: migrations
+
+#staging:
+#  dialect: mysql
+#  datasource: oauth-as:{PASSWORD}@tcp(localhost:3306)/oauth-as?parseTime=true
+#  dir: migrations/mysql
+#  table: migrations

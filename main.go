@@ -8,6 +8,7 @@ import (
 	"github.com/ken5scal/oauth-az/handler"
 	"github.com/ken5scal/oauth-az/infrastructure"
 	"github.com/pelletier/go-toml"
+	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/oauth2"
 	"io/ioutil"
 	"log"
@@ -75,6 +76,8 @@ func main() {
 		Handler: handlers.CORS(allowedOrigins, allowedHeaders, allowedMethods)(r),
 	}
 	log.Fatal(srv.ListenAndServe())
+
+	bcrypt.CompareHashAndPassword()
 }
 
 func fuga(w http.ResponseWriter, r *http.Request) {

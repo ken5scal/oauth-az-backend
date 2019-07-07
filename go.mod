@@ -1,10 +1,17 @@
 module github.com/ken5scal/oauth-az
 
 require (
+	github.com/denisenkom/go-mssqldb v0.0.0-20190515213511-eb9f6a1743f3 // indirect
 	github.com/go-redis/redis v6.15.2+incompatible
+	github.com/go-sql-driver/mysql v1.4.1 // indirect
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/handlers v1.4.0
 	github.com/gorilla/mux v1.7.2
+	github.com/lib/pq v1.1.1 // indirect
+	github.com/mattn/go-runewidth v0.0.4 // indirect
+	github.com/mattn/go-sqlite3 v1.10.0 // indirect
+	github.com/mitchellh/cli v1.0.0 // indirect
+	github.com/olekukonko/tablewriter v0.0.1 // indirect
 	github.com/onsi/ginkgo v1.8.0 // indirect
 	github.com/onsi/gomega v1.5.0 // indirect
 	github.com/pelletier/go-toml v1.4.0

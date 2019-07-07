@@ -37,7 +37,7 @@ But, since this repository is purpose for education, let's put OAuth logic under
 * orm: [SQLBoiler](https://github.com/volatiletech/sqlboiler)
 * migration tool: [sql-migrate](https://github.com/rubenv/sql-migrate)
 
-# The Default Parameters
+# Set up
 
 ## Server environment
 * running env: docker container
@@ -47,15 +47,15 @@ But, since this repository is purpose for education, let's put OAuth logic under
 One can customize parameters by adding `--build-args` in docker build command 
 
 ## App Environment
-* debug: false 
-
+* The default parameters
+    * debug: false 
 * Build Using Docker
 ```
 % docker build -f Dockerfile -t oauth-az-back-dev .
 % docker run -it --rm -p 8080:8080 --name oauth-az-back oauth-az-back-dev:latest
 ```
 
-* Build Locally
+* Install Dependencies
 ```
 % go mod init
 % vgo build
@@ -63,15 +63,33 @@ One can customize parameters by adding `--build-args` in docker build command
 ```
 
 ## DB Envinronment
+
+* Initial setup
+
+### Local Build
+
 ```
+
+# Mount local directories for data persistence
 % mkdir db
 % sudo chmod -R 777 db
+
+# Start 
 % docker run --name mysql --restart always -v $(pwd)/db:/var/lib/mysql -v $(pwd)/db/config:/etc/mysql/conf.d -e MYSQL_ROOT_PASSWORD=password -p 3306:3306 -d mysql
 % docker exec -it mysql /bin/bash
 root@0caa697a9dcc:/# mysql -u root -p
+
+# Create DB and DB user with a right amount privileges
+mysql> CREATE DATABASE authz;
 musql > CREATE USER 'oauth-as'@'{YOUR HOST, eg: %, localhost}' IDENTIFIED BY '{RANDOM SECURE PASSWORD}';
 mysql > select User, Plugin from mysql.user;
-mysql > GRANT {YOUR Privilege, eg: ALL PRIVILEGES} ON database.table TO 'oauth-as'@'localhost';
+mysql > GRANT {YOUR Privilege, eg: ALL PRIVILEGES} ON authz.* TO 'oauth-as'@'{YOUR HOST, eg: %, localhost}';
+mysql > exit
+root@0caa697a9dcc:/# exit
+
+# Start Migration
+% mkdir migrations/mysql
+% sql-migrate new -env=development -config=dbconfig.yml authz-db-migration
 ```
 
 # ToDo
