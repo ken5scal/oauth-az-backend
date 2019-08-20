@@ -11,5 +11,13 @@ services:
         ports:
             - "3314:5432"
         volumes:
-            - ./migrations/dev:/docker-entrypoint-initdb.d
+            - type: bind
+              source: ./migrations/dev/init
+              target: /docker-entrypoint-initdb.d
+            - type: volume
+              source: dbdata
+              target: /var/lib/postgresql/data/
 
+volumes: #Named volumes must be listed under the top-level volumes
+  dbdata:
+      driver: local
