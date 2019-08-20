@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS clients (
     salt               VARCHAR(255) UNIQUE,
     status client_status default 'developing' NOT NULL,
     type client_type NOT NULL,
-    revision_ver  INTEGER default 1 NOT NULL,
+    revision_ver  INTEGER default 1 NOT NULL UNIQUE,
     PRIMARY KEY  (client_id)
 );
 
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS authz (
 
 
 -- +migrate Down
-DROP TABLE authz;
-drop INDEX index_client_on_client_id;
-drop INDEX index_client_on_revision_ver;
-DROP TABLE clients;
+-- DROP TABLE authz;
+-- drop INDEX index_client_on_client_id;
+-- drop INDEX index_client_on_revision_ver;
+-- DROP TABLE clients;
