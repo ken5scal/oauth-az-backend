@@ -1,12 +1,15 @@
 version: '3.3'
 services:
     db:
-        image: mysql:5.7
-        restart: always
+        image: postgres:11.5
+        container_name: "az-db"
         environment:
-            MYSQL_DATABASE: sample_db
-            MYSQL_USER: user
-            MYSQL_PASSWORD: password
-            MYSQL_ROOT_PASSWORD: rootpassword
+            POSTGRES_DATABASE: az_db
+            POSTGRES_USER: user
+            POSTGRES_PASSWORD: password
+            POSTGRES_ROOT_PASSWORD: rootpassword
         ports:
-        - "3314:3306"
+            - "3314:5432"
+        volumes:
+            - ./migrations/dev:/docker-entrypoint-initdb.d
+

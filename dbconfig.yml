@@ -1,7 +1,7 @@
 development:
-  dialect: mysql
+  dialect: postgres
   datasource: db-maintainer:password@tcp(localhost:3306)/authz?parseTime=true #oauth-as.db?parseTime=true
-  dir: migrations/mysql
+  dir: migrations/dev
   table: migrations
 
 #staging:
