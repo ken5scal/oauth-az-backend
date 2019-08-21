@@ -8,13 +8,14 @@ import (
 	"github.com/ken5scal/oauth-az/handler"
 	"github.com/ken5scal/oauth-az/infrastructure"
 	"github.com/pelletier/go-toml"
-	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/oauth2"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
+
+	_ "github.com/lib/pq"
 )
 
 var oauthConfig oauth2.Config
@@ -22,6 +23,7 @@ var port = "8080"
 var debug = true
 var addr = "localhost"
 var configFileLocation = "config.toml"
+var psqlInfo string
 
 func init() {
 	if len(os.Args) > 1 && os.Args[1] != "" {
@@ -54,10 +56,26 @@ func init() {
 			log.Fatal(fmt.Sprintf("failed parsing env var: %v", err.Error()))
 		}
 	}
+
+	if config.Get("db_host") != nil &&
+		config.Get("db_port") != nil &&
+		config.Get("db_user") != nil &&
+		config.Get("db_password") != nil &&
+		config.Get("db_name") != nil {
+		psqlInfo = fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+			config.Get("db_host"), config.Get("db_port"), config.Get("db_user"), config.Get("db_password"), config.Get("db_name"))
+	} else {
+		log.Fatal(fmt.Sprintf("failed retrieving db config: %v", err.Error()))
+	}
 }
 
 func main() {
-	cnn, _ := sql.Open("mysql", "dataSourceName")
+	cnn, err := sql.Open("postgres", psqlInfo)
+	if err != nil {
+		panic(err)
+	}
+	defer cnn.Close()
+
 	repo := infrastructure.NewTokenRepository(cnn)
 	service := handler.NewService(repo)
 	ctrl := handler.NewHandler(service)
@@ -77,7 +95,7 @@ func main() {
 	}
 	log.Fatal(srv.ListenAndServe())
 
-	bcrypt.CompareHashAndPassword()
+	//bcrypt.CompareHashAndPassword()
 }
 
 func fuga(w http.ResponseWriter, r *http.Request) {
