@@ -20,56 +20,46 @@ import (
 )
 
 type tokenHandler struct {
-	tokenService TokenServiceImpl
+	repo domain.TokenRepository
 }
 
-func NewHandler(s TokenServiceImpl) *tokenHandler {
-	return &tokenHandler{s}
+func NewTokenHandler(r domain.TokenRepository) *tokenHandler {
+	return &tokenHandler{r}
 }
 
 func (c *tokenHandler) RequestToken(w http.ResponseWriter, r *http.Request) {
 	// TODO parse request and retrieve parameters
 	authzInfo := "" //For now
-	token, err := c.tokenService.GenerateToken(authzInfo)
+	token, err := c.GenerateToken(authzInfo)
 
 	// TODO Write to w
 	fmt.Println(token)
 	fmt.Println(err)
-	response.ResponseRequestToken(w, c.tokenService.GetReturnedName())
+	response.ResponseRequestToken(w, c.GetReturnedName())
 }
 
-type TokenServiceImpl struct {
-	repo domain.TokenRepository
+func (c *tokenHandler) GetTokenByID(tokenID string) (*domain.ReturningToken, error) {
+	token, err := c.repo.GetAccessTokenByID(tokenID)
+	return domain.ReturnToken(token), err
 }
 
-func NewService(repository domain.TokenRepository) TokenServiceImpl {
-	return TokenServiceImpl{
-		repo: repository,
-	}
-}
-
-func (t *TokenServiceImpl) GetTokenByID(tokenID string) (*domain.ReturningToken, error) {
-	hoge, err := t.repo.GetAccessTokenByID(tokenID)
-	return domain.ReturnToken(hoge), err
-}
-
-func (t *TokenServiceImpl) GetReturnedName() string {
+func (c *tokenHandler) GetReturnedName() string {
 	return ""
 }
 
-func (t *TokenServiceImpl) GenerateToken(authZInfor string) (*domain.ReturningToken, error) {
+func (c *tokenHandler) GenerateToken(authZInfor string) (*domain.ReturningToken, error) {
 	// Put Business Logic
 	// Check Business logics
 	// Insert to db
 
-	r, ok := t.repo.(*infrastructure.TokenRepositoryImpl)
+	r, ok := c.repo.(*infrastructure.TokenRepositoryImpl)
 	if !ok {
 		return nil, errors.New("TokenRepositoryImpl does not implement TokenRepository")
 	}
 	r.BeginTransaction()
 
 	token := domain.NewToken(authZInfor)
-	err := t.repo.Insert(token)
+	err := c.repo.Insert(token)
 
 	if err != nil {
 		r.Rollback()

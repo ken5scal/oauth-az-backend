@@ -76,9 +76,8 @@ func main() {
 	}
 	defer cnn.Close()
 
-	repo := infrastructure.NewTokenRepository(cnn)
-	service := handler.NewService(repo)
-	ctrl := handler.NewHandler(service)
+	tokenRepo := infrastructure.NewTokenRepository(cnn)
+	authzRepo := infrastructure.NewAuthzInfoRepositoryImpl(cnn)
 
 	// assuming administrative requests from frontend
 	allowedOrigins := handlers.AllowedOrigins([]string{"http://localhost:3000"})
@@ -88,7 +87,8 @@ func main() {
 
 	r := mux.NewRouter()
 	r.HandleFunc("/", fuga)
-	r.HandleFunc("/hoge", ctrl.RequestToken)
+	r.HandleFunc("/authorize", handler.NewAuthzHandler(authzRepo).RequestAuthz)
+	r.HandleFunc("/token", handler.NewTokenHandler(tokenRepo).RequestToken)
 	srv := &http.Server{
 		Addr:    addr + ":" + port,
 		Handler: handlers.CORS(allowedOrigins, allowedHeaders, allowedMethods)(r),

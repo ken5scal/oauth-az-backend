@@ -51,17 +51,37 @@ func (t *TokenRepositoryImpl) Commit() error {
 	return t.tx.Commit()
 }
 
-type AuthorzInfoRepositoryImpl struct {
+type AuthzInfoRepositoryImpl struct {
 	db *sql.DB
 	r  *redis.Conn // TODO 適当
 	tx *sql.Tx
 }
 
 //NewAuthzInfoRepository
-func NewAuthzInfoRepositoryImpl(db *sql.DB) *AuthorzInfoRepositoryImpl {
-	return &AuthorzInfoRepositoryImpl{
+func NewAuthzInfoRepositoryImpl(db *sql.DB) *AuthzInfoRepositoryImpl {
+	return &AuthzInfoRepositoryImpl{
 		db: db,
 	}
+}
+
+func (a *AuthzInfoRepositoryImpl) GetAuthzInfoForAccessToken(clientID, userID string) (*domain.AuthorizationInfo, error) {
+	return nil, nil
+}
+
+func (a *AuthzInfoRepositoryImpl) GetAuthzInfoByID(authzInfoID string) (*domain.AuthorizationInfo, error) {
+	return nil, nil
+}
+
+func (a *AuthzInfoRepositoryImpl) Insert(t *domain.AuthorizationInfo) error {
+	return nil
+}
+
+func (a *AuthzInfoRepositoryImpl) Update(t *domain.AuthorizationInfo) error {
+	return nil
+}
+
+func (a *AuthzInfoRepositoryImpl) Delete(t *domain.AuthorizationInfo) error {
+	return nil
 }
 
 // Transact is a wrapper to handle transaction properly
