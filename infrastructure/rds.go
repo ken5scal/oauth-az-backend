@@ -84,6 +84,23 @@ func (a *AuthzInfoRepositoryImpl) Delete(t *domain.AuthorizationInfo) error {
 	return nil
 }
 
+func (t *AuthzInfoRepositoryImpl) BeginTransaction() (*sql.Tx, error) {
+	if tx, err := t.db.Begin(); err != nil {
+		return nil, err
+	} else {
+		t.tx = tx
+		return tx, nil
+	}
+}
+
+func (t *AuthzInfoRepositoryImpl) Rollback() error {
+	return t.tx.Rollback()
+}
+
+func (t *AuthzInfoRepositoryImpl) Commit() error {
+	return t.tx.Commit()
+}
+
 // Transact is a wrapper to handle transaction properly
 // ref: https://stackoverflow.com/questions/16184238/database-sql-tx-detecting-commit-or-rollback
 func Transact(db *sql.DB, txFunc func(*sql.Tx) error) (err error) {

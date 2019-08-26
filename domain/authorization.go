@@ -28,8 +28,8 @@ type AuthorizationInfo struct {
 // https://tools.ietf.org/html/rfc6749#section-4.1.2
 const codeExpirationDuration = 10
 
-func AuthorizationInfoBuilder(c *client) AuthorizationInfo {
-	return AuthorizationInfo{
+func AuthorizationInfoBuilder(c *client) *AuthorizationInfo {
+	return &AuthorizationInfo{
 		AuthzRevision:  c.AuthzRevision,
 		CodeExpiration: time.Now().Local().Add(time.Minute * time.Duration(codeExpirationDuration)),
 	}
