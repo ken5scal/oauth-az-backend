@@ -30,7 +30,7 @@ const codeExpirationDuration = 10
 
 func AuthorizationInfoBuilder(c *client) *AuthorizationInfo {
 	return &AuthorizationInfo{
-		AuthzRevision:  c.AuthzRevision,
+		//AuthzRevision:  c.AuthzRevision,
 		CodeExpiration: time.Now().Local().Add(time.Minute * time.Duration(codeExpirationDuration)),
 	}
 }
