@@ -9,6 +9,12 @@ import (
 )
 
 var ErrDuplicatedRegistrationUris = errors.New("cannot register duplicated URIs")
+var ErrInvalidClientType = errors.New("cannot register client type other than confidential or public")
+
+const (
+	ConfidentialClient = "confidential"
+	PublicClient       = "public"
+)
 
 type client struct {
 	ID string
@@ -18,14 +24,46 @@ type client struct {
 	// calculated by https://8gwifi.org/passwdgen.jsp
 	Secrets      string
 	RedirectUris []string
-	ClientType   ClientType
+	ClientType   string
 	ClientStatus ClientStatus // manage
+	Name         string       // Not defined in rfc, but need for reaability
 
 	// RP status
 	//AuthzRevision int  // Let's not care at this point
 }
 
-func ClientBuilder() *client {
+type builder struct {
+	clientType string
+}
+
+func newClientBuilder() *builder {
+	return &builder{}
+}
+
+func (cb *builder) ClientType(clientType string) *builder {
+	cb.clientType = clientType
+	return cb
+}
+
+func (cb *builder) Build() (*client, error) {
+	if !isClientTypeValid(cb.clientType) {
+		return nil, ErrInvalidClientType
+	}
+
+	return &client{ClientType: cb.clientType}, nil
+}
+
+// ClientType is the OAuth client types
+// https://tools.ietf.org/html/rfc6749#section-2.1
+func isClientTypeValid(clientType string) bool {
+	return clientType == ConfidentialClient || clientType == PublicClient
+}
+
+func (c *client) Build() *client {
+	return c
+}
+
+func NewClientBuilder() *client {
 	var lengthEnoughForEntropy = 26
 	return &client{
 		ID:      uuid.New().String(),
@@ -70,22 +108,6 @@ func (c *client) RegisterRedirectUris(uris []string) error {
 //func (c *client) CopyAuthzRevision() int {
 //	return c.AuthzRevision
 //}
-
-// ClientType is the OAuth client types
-// https://tools.ietf.org/html/rfc6749#section-2.1
-type ClientType struct {
-	value string
-}
-
-var Confidential = ClientType{"confidential"}
-var Public = ClientType{"public"}
-
-func (c ClientType) String() string {
-	if c.value == "" {
-		return "undefined client"
-	}
-	return c.value
-}
 
 // ClientStatus represents client's current availability
 type ClientStatus struct {
