@@ -5,19 +5,20 @@ import (
 	"testing/quick"
 )
 
-func Test_Client_Register(t *testing.T) {
-	t.Run("register clietnt", func(t *testing.T) {
-		got := NewClientBuilder().Build()
-		if got.ID == "" || got.Secrets == "" {
-			t.Errorf("got nothing, want %v", got)
+func Test_client_Register_Name(t *testing.T) {
+	builder := newClientBuilder()
+	t.Run("register client without name", func(t *testing.T) {
+		_, err := builder.ClientType(confidential).Build()
+		if err != nil {
+			t.Error("wanted a nil error but got one")
 		}
 	})
 }
 
-func Test_client_RegisterType(t *testing.T) {
+func Test_client_Register_ClientType(t *testing.T) {
 	builder := newClientBuilder()
 	t.Run("register proper client type", func(t *testing.T) {
-		properType := []string{"confidential", "public"}
+		properType := []clientType{confidential, public}
 		for _, clientType := range properType {
 			_, err := builder.ClientType(clientType).Build()
 			if err != nil {
@@ -27,13 +28,13 @@ func Test_client_RegisterType(t *testing.T) {
 	})
 
 	t.Run("register in-proper client type", func(t *testing.T) {
-		got, err := builder.ClientType("not proper client type").Build()
+		got, err := builder.ClientType(clientType{}).Build()
 		if got != nil {
-			t.Error("wanted a nil client but didn't get one")
+			t.Error("wanted a nil but got a client")
 		}
 
 		if err.Error() != ErrInvalidClientType.Error() {
-			t.Errorf("got %q, want %q", got, ErrInvalidClientType.Error())
+			t.Errorf("got %v, want %v", got, ErrInvalidClientType.Error())
 		}
 	})
 
@@ -46,28 +47,13 @@ func Test_client_RegisterType(t *testing.T) {
 			t.Error("failed checks", ErrInvalidClientType)
 		}
 	})
-
-	//assertion := func(arabic uint16) bool {
-	//	if arabic > 3999 {
-	//		return true
-	//	}
-	//	log.Println(arabic)
-	//	roman := ConvertToRoman(int(arabic))
-	//	fromRoman := ConvertToArabic(roman)
-	//	return uint16(fromRoman) == arabic
-	//}
-	//
-	//quickConfig := &quick.Config{MaxCount:10}
-	//
-	//// quick.Check a function that it will run against a number of random inputs, if the function returns false it will be seen as failing the check.
-	//if err := quick.Check(assertion, quickConfig); err != nil {
-	//	t.Error("failed checks", err)
-	//}
 }
 
 func Test_client_RegisterRedirectUri(t *testing.T) {
-	existingClient := NewClientBuilder()
-	existingClient.RedirectUris = []string{"http://localhost:8080"}
+	existingClient, _ := newClientBuilder().ClientType(confidential).Build()
+	testClient1, _ := newClientBuilder().ClientType(confidential).Build()
+	testClient2, _ := newClientBuilder().ClientType(confidential).Build()
+	existingClient.redirectUris = []string{"http://localhost:8080"}
 	tests := []struct {
 		name    string
 		client  *client
@@ -77,13 +63,13 @@ func Test_client_RegisterRedirectUri(t *testing.T) {
 	}{
 		{
 			name:    "Single Registration",
-			client:  NewClientBuilder(),
+			client:  testClient1,
 			args:    []string{"http://localhost:8080"},
 			wantErr: false,
 		},
 		{
 			name:    "Duplicated Registration to New Client",
-			client:  NewClientBuilder(),
+			client:  testClient2,
 			args:    []string{"http://localhost:8080", "http://localhost:8080"},
 			wantErr: true,
 			errMsg:  ErrDuplicatedRegistrationUris,
@@ -99,11 +85,11 @@ func Test_client_RegisterRedirectUri(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := &client{
-				ID:           tt.client.ID,
-				Secrets:      tt.client.Secrets,
-				RedirectUris: tt.client.RedirectUris,
-				ClientType:   tt.client.ClientType,
-				ClientStatus: tt.client.ClientStatus,
+				id:           tt.client.id,
+				secrets:      tt.client.secrets,
+				redirectUris: tt.client.redirectUris,
+				clientType:   tt.client.clientType,
+				clientStatus: tt.client.clientStatus,
 			}
 			if err := c.RegisterRedirectUris(tt.args); (err != nil) != tt.wantErr {
 				t.Errorf("client.RegisterRedirectUri() error = %v, wantErr %v", err, tt.wantErr)

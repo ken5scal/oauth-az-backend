@@ -9,7 +9,7 @@ import "time"
 // be compared with past one
 // This can be deleted once user revoked the app
 type AuthorizationInfo struct {
-	AuthorizationId string // Not ID Token, should be indexed in DB
+	AuthorizationId string // Not id Token, should be indexed in DB
 	ClientId        string // should be indexed combined with UserId
 	UserId          string
 	Scope           []string

@@ -14,22 +14,24 @@ var ErrInvalidClientType = errors.New("cannot register client type other than co
 const (
 	ConfidentialClient = "confidential"
 	PublicClient       = "public"
-)
 
-type client struct {
-	ID string
 	// "minimum of 128 bits of entropy where the probability of an attacker guessing the generated token is
 	// less than or equal to 2^(-160) as per [RFC6749] section 10.10"
 	//  https://bitbucket.org/openid/fapi/pull-requests/45/bring-access-token-requirements-inline/diff
 	// calculated by https://8gwifi.org/passwdgen.jsp
-	Secrets      string
-	RedirectUris []string
-	ClientType   string
-	ClientStatus ClientStatus // manage
-	Name         string       // Not defined in rfc, but need for reaability
+	lengthEnoughForEntropy = 26
+)
 
-	// RP status
-	//AuthzRevision int  // Let's not care at this point
+type client struct {
+	id           string
+	secrets      string
+	redirectUris []string
+	clientType   string
+
+	// they are values not related to rfc, but friendly for managing authz endpoints
+	name          string       // Not defined in rfc, but need for reaability
+	clientStatus  ClientStatus // manage developing status
+	authzRevision int
 }
 
 type builder struct {
@@ -40,42 +42,35 @@ func newClientBuilder() *builder {
 	return &builder{}
 }
 
-func (cb *builder) ClientType(clientType string) *builder {
-	cb.clientType = clientType
+func (cb *builder) ClientType(clientType clientType) *builder {
+	cb.clientType = clientType.String()
 	return cb
 }
 
-func (cb *builder) Build() (*client, error) {
+func (cb *builder) Build() (c *client, err error) {
 	if !isClientTypeValid(cb.clientType) {
 		return nil, ErrInvalidClientType
 	}
 
-	return &client{ClientType: cb.clientType}, nil
-}
-
-// ClientType is the OAuth client types
-// https://tools.ietf.org/html/rfc6749#section-2.1
-func isClientTypeValid(clientType string) bool {
-	return clientType == ConfidentialClient || clientType == PublicClient
-}
-
-func (c *client) Build() *client {
-	return c
-}
-
-func NewClientBuilder() *client {
-	var lengthEnoughForEntropy = 26
-	return &client{
-		ID:      uuid.New().String(),
-		Secrets: generateSecret(lengthEnoughForEntropy),
-		//AuthzRevision: 1,
+	c = &client{
+		id:         uuid.New().String(),
+		clientType: cb.clientType,
+		secrets:    generateSecret(lengthEnoughForEntropy),
 	}
+
+	return c, nil
 }
 
 func generateSecret(length int) string {
 	b := make([]byte, length)
 	rand.Read(b)
 	return base64.StdEncoding.EncodeToString(b)[:length]
+}
+
+// clientType is the OAuth client types
+// https://tools.ietf.org/html/rfc6749#section-2.1
+func isClientTypeValid(clientType string) bool {
+	return clientType == ConfidentialClient || clientType == PublicClient
 }
 
 func (c *client) RegisterRedirectUris(uris []string) error {
@@ -95,21 +90,28 @@ func (c *client) RegisterRedirectUris(uris []string) error {
 	}
 
 	for registeringUri, _ := range tmpUri {
-		for _, existingUri := range c.RedirectUris {
+		for _, existingUri := range c.redirectUris {
 			if registeringUri == existingUri {
 				return ErrDuplicatedRegistrationUris
 			}
 		}
-		c.RedirectUris = append(c.RedirectUris, registeringUri)
+		c.redirectUris = append(c.redirectUris, registeringUri)
 	}
 	return nil
 }
 
-//func (c *client) CopyAuthzRevision() int {
-//	return c.AuthzRevision
-//}
+type clientType struct {
+	clientType string
+}
 
-// ClientStatus represents client's current availability
+var confidential = clientType{"confidential"}
+var public = clientType{"confidential"}
+
+func (c clientType) String() string {
+	return c.clientType
+}
+
+// clientStatus represents client's current availability
 type ClientStatus struct {
 	status string
 }
