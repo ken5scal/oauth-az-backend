@@ -17,13 +17,13 @@ import (
 
 func TestGETClients(t *testing.T) {
 	t.Run("registers client", func(t *testing.T) {
-		request, _ := http.NewRequest(http.MethodPost, "/client/hogefuga", nil)
+		request, _ := http.NewRequest(http.MethodPost, "/client/org/", nil)
 		response := httptest.NewRecorder()
 
 		ClientServer(response, request)
 
 		got := response.Body.String()
-		want := "success"
+		want := "client-a"
 
 		if got != want {
 			t.Errorf("got %q, want %q", got, want)
