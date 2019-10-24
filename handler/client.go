@@ -1,10 +1,10 @@
 package handler
 
-//type clientHandler struct {
-//	repo domain.ClientRepository
-//}
+import (
+	"fmt"
+	"net/http"
+)
 
-// registerClient
-// unRegisterClient
-// suspendClient
-// releaseClient
+func ClientServer(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprint(w, "success")
+}

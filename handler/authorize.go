@@ -22,7 +22,7 @@ func (h *authzHandler) GenerateAuthzCode() (*domain.AuthorizationInfo, error) {
 	r, _ := h.repo.(*infrastructure.AuthzInfoRepositoryImpl)
 	r.BeginTransaction()
 
-	azInfo := domain.AuthorizationInfoBuilder()
+	azInfo := domain.AuthorizationInfoBuilder(nil)
 	err := h.repo.Insert(azInfo)
 
 	if err != nil {

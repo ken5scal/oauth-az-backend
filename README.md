@@ -96,3 +96,9 @@ root@0caa697a9dcc:/# exit
 * [ ] Implement OAuth
 * [ ] Makefile
 * [ ] Separate debug/prod envs
+
+# Reference
+## Architecture
+ * Pospomeのサーバーサイドアーキテクチャ
+## Tests
+ * Learn Go with Tests: https://quii.gitbook.io/learn-go-with-tests/
