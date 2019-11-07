@@ -7,7 +7,7 @@ require (
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/handlers v1.4.0
 	github.com/gorilla/mux v1.7.2
-	github.com/lib/pq v1.2.0 // indirect
+	github.com/lib/pq v1.2.0
 
 	github.com/mattn/go-runewidth v0.0.4 // indirect
 	github.com/mattn/go-sqlite3 v1.10.0 // indirect
@@ -25,3 +25,5 @@ require (
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	gopkg.in/gorp.v1 v1.7.2 // indirect
 )
+
+go 1.13
