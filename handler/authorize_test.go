@@ -9,14 +9,29 @@ import (
 
 func TestAuthorizationHeader(t *testing.T) {
 	request, _ := http.NewRequest(http.MethodGet, "/authorize", nil)
-	request.Header.Set("Content-Type", "fake"+authorizationRequestMediaType)
-
-	router := http.NewServeMux()
-	router.HandleFunc("/authorize", NewAuthzHandler(&DummyRepository{}).RequestAuthz)
 	response := httptest.NewRecorder()
 
-	if response.Code != http.StatusUnsupportedMediaType {
-		t.Errorf("got response code %d want %d", response.Code, http.StatusUnsupportedMediaType)
+	requiredParams := map[string]string{
+		"response_type": "code",
+		"client_id":     "s6BhdRkqt3",
+		"redirect_uri":  "https://client.example.com/cb",
+		//scope
+		//state
+	}
+
+	q := request.URL.Query()
+	for k, v := range requiredParams {
+		q.Add(k, v)
+	}
+	request.URL.RawQuery = q.Encode()
+
+	server := http.NewServeMux()
+	handler := NewAuthzHandler(&DummyRepository{})
+	server.HandleFunc("/authorize", handler.RequestAuthz)
+	server.ServeHTTP(response, request)
+
+	if response.Code != http.StatusFound {
+		t.Errorf("did not get correct status, got %d, want %d", response.Code, http.StatusFound)
 	}
 }
 

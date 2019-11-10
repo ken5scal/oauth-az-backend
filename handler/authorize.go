@@ -6,8 +6,6 @@ import (
 	"net/http"
 )
 
-const authorizationRequestMediaType = "application/x-www-form-urlencoded"
-
 type authzHandler struct {
 	repo domain.AuthzInfoRepository
 }
@@ -15,14 +13,12 @@ type authzHandler struct {
 func NewAuthzHandler(r domain.AuthzInfoRepository) *authzHandler {
 	h := new(authzHandler)
 	h.repo = r
-
 	return h
 }
 
+// RequestAuthz assumes user-agent is a web browser
 func (h *authzHandler) RequestAuthz(w http.ResponseWriter, r *http.Request) {
-	if r.Header.Get("Content-type") != authorizationRequestMediaType {
 
-	}
 }
 
 func (h *authzHandler) GenerateAuthzCode() (*domain.AuthorizationInfo, error) {
