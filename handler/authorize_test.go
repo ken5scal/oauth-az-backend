@@ -2,8 +2,10 @@ package handler
 
 import (
 	"github.com/ken5scal/oauth-az/domain"
+	"log"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 )
 
@@ -32,6 +34,36 @@ func TestAuthorizationHeader(t *testing.T) {
 
 	if response.Code != http.StatusFound {
 		t.Errorf("did not get correct status, got %d, want %d", response.Code, http.StatusFound)
+	}
+
+	u, err := url.Parse(response.Header().Get("Location"))
+	if err != nil {
+		t.Errorf("got an error when parsing authorization response's location header: %v", err)
+	}
+
+	if u.Query().Get("code") == "" {
+		t.Error("code parameter in authorization response is required")
+	}
+
+	// state is required iff state parameter was present in the request
+	if q.Get("state") != "" {
+		state := u.Query().Get("state")
+		if state == "" {
+			t.Error("state parameter in authorization response is required")
+		}
+
+		if state != q.Get("state") {
+			t.Errorf("did not get correct status, got %s, want %s", state, q.Get("state"))
+		}
+	}
+
+	d, err := u.Parse("")
+	if err != nil {
+		log.Fatal("failed parsing url")
+	}
+
+	if d.String() != requiredParams["redirect_uri"] {
+		t.Errorf("did not get correct redirect url, got %v, want %v", d.String(), requiredParams["redirect_uri"])
 	}
 }
 
