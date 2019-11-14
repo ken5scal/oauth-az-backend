@@ -1,21 +1,41 @@
 package domain
 
-import "testing"
+import (
+	"net/url"
+	"testing"
+)
 
 func TestGeneratingAuthorizationCode(t *testing.T) {
 	builder := &authorizationBuilder{
 		responseType: "code",
-		clientId:     "xaaaaa",
-	}
-	az, err := builder.Build()
-	if err != nil {
-		t.Errorf("got an error %v but didn't want one", err.Error())
+		clientId:     "clietndId",
 	}
 
-	if az.AuthzCode == "" {
-		t.Errorf("wanted a code but didn't get one")
-	}
+	t.Run("generate simple auth code", func(t *testing.T) {
+		az, err := builder.Build()
+		if err != nil {
+			t.Errorf("got an error %v but didn't want one", err.Error())
+		}
 
+		if az.code == "" {
+			t.Errorf("wanted a code but didn't get one")
+		}
+	})
+
+	t.Run("generate auth code with redirect uri", func(t *testing.T) {
+		redirectUri, _ := url.Parse("https://client.example.com/cb")
+		az, _ := builder.RedirectUri(redirectUri).Build()
+		if az.redirectUri != redirectUri {
+			t.Errorf("got redirect Uri %v but wanted %v", az.redirectUri, redirectUri)
+		}
+	})
+
+	t.Run("generate auth code with state", func(t *testing.T) {
+		az, _ := builder.State("xyz").Build()
+		if az.state == "" && az.state != builder.state {
+			t.Errorf("wanted a state %v, but got %v", az.state, builder.state)
+		}
+	})
 	//if az.state != "" && hoge.state == "" {
 	//	t.Errorf("wanted a state but didn't get one")
 	//}

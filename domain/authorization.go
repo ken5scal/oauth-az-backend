@@ -47,9 +47,15 @@ const codeExpirationDuration = 10
 type authorizationBuilder struct {
 	responseType string
 	clientId     string
-	redirectUri  url.URL
+	redirectUri  *url.URL
 	scope        string
 	state        string
+}
+
+type authorization struct {
+	code        string
+	state       string
+	redirectUri *url.URL
 }
 
 // AuthorizationInfoBuilder takes two arguments required for Authorization Request
@@ -61,7 +67,7 @@ func AuthorizationInfoBuilder(responseType, clientId string) *authorizationBuild
 	}
 }
 
-func (builder *authorizationBuilder) RedirectUri(redirectUri url.URL) *authorizationBuilder {
+func (builder *authorizationBuilder) RedirectUri(redirectUri *url.URL) *authorizationBuilder {
 	builder.redirectUri = redirectUri
 	return builder
 }
@@ -82,7 +88,7 @@ func generateAuthorizationCode(length int) string {
 	return base64.StdEncoding.EncodeToString(b)[:length]
 }
 
-func (builder *authorizationBuilder) Build() (*AuthorizationInfo, error) {
+func (builder *authorizationBuilder) Build() (*authorization, error) {
 	if builder.responseType != "code" {
 		return nil, errors.New(InvalidRequest)
 	}
@@ -91,19 +97,22 @@ func (builder *authorizationBuilder) Build() (*AuthorizationInfo, error) {
 		return nil, errors.New(InvalidRequest)
 	}
 
-	builder.scope = generateAuthorizationCode(lengthEnoughForEntropy)
-
-	return &AuthorizationInfo{
-		AuthorizationId: "",
-		ClientId:        "",
-		UserId:          "",
-		Scope:           nil,
-		RedirectUri:     "",
-		AuthzCode:       "xxxx",
-		CodeExpiration:  time.Now().Local().Add(time.Minute * time.Duration(codeExpirationDuration)),
-		RefreshToken:    "",
-		AuthzRevision:   0,
+	return &authorization{
+		code:        generateAuthorizationCode(lengthEnoughForEntropy),
+		state:       builder.state,
+		redirectUri: builder.redirectUri,
 	}, nil
+	//return &AuthorizationInfo{
+	//	AuthorizationId: "",
+	//	ClientId:        "",
+	//	UserId:          "",
+	//	Scope:           nil,
+	//	RedirectUri:     "",
+	//	AuthzCode:       "xxxx",
+	//	CodeExpiration:  time.Now().Local().Add(time.Minute * time.Duration(codeExpirationDuration)),
+	//	RefreshToken:    "",
+	//	AuthzRevision:   0,
+	//}, nil
 }
 
 func (a *AuthorizationInfo) isCodeUnExpired() bool {
