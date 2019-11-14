@@ -1,6 +1,22 @@
 package domain
 
-import "time"
+import (
+	"crypto/rand"
+	"encoding/base64"
+	"errors"
+	"net/url"
+	"time"
+)
+
+const (
+	InvalidRequest             = "invalid_request"
+	ResponseUnauthorizedClient = "unauthorized_client"
+	AccessDenied               = "access_denied"
+	UnsupportedResponseType    = "unsupported_response_type"
+	InvalidScope               = "invalid_scope"
+	ServerError                = "server_error"
+	TemporarilyUnavailable     = "temporarily_unavailable"
+)
 
 // AuthorizationInfo is authorized info that RO granted to the RP
 // so this is tied to user
@@ -28,11 +44,66 @@ type AuthorizationInfo struct {
 // https://tools.ietf.org/html/rfc6749#section-4.1.2
 const codeExpirationDuration = 10
 
-func AuthorizationInfoBuilder(c *client) *AuthorizationInfo {
-	return &AuthorizationInfo{
-		//AuthzRevision:  c.AuthzRevision,
-		CodeExpiration: time.Now().Local().Add(time.Minute * time.Duration(codeExpirationDuration)),
+type authorizationBuilder struct {
+	responseType string
+	clientId     string
+	redirectUri  url.URL
+	scope        string
+	state        string
+}
+
+// AuthorizationInfoBuilder takes two arguments required for Authorization Request
+// https://tools.ietf.org/html/rfc6749#section-4.1.1
+func AuthorizationInfoBuilder(responseType, clientId string) *authorizationBuilder {
+	return &authorizationBuilder{
+		responseType: responseType,
+		clientId:     clientId,
 	}
+}
+
+func (builder *authorizationBuilder) RedirectUri(redirectUri url.URL) *authorizationBuilder {
+	builder.redirectUri = redirectUri
+	return builder
+}
+
+func (builder *authorizationBuilder) Scope(scope string) *authorizationBuilder {
+	builder.scope = scope
+	return builder
+}
+
+func (builder *authorizationBuilder) State(state string) *authorizationBuilder {
+	builder.state = state
+	return builder
+}
+
+func generateAuthorizationCode(length int) string {
+	b := make([]byte, length)
+	rand.Read(b)
+	return base64.StdEncoding.EncodeToString(b)[:length]
+}
+
+func (builder *authorizationBuilder) Build() (*AuthorizationInfo, error) {
+	if builder.responseType != "code" {
+		return nil, errors.New(InvalidRequest)
+	}
+
+	if builder.clientId == "" {
+		return nil, errors.New(InvalidRequest)
+	}
+
+	builder.scope = generateAuthorizationCode(lengthEnoughForEntropy)
+
+	return &AuthorizationInfo{
+		AuthorizationId: "",
+		ClientId:        "",
+		UserId:          "",
+		Scope:           nil,
+		RedirectUri:     "",
+		AuthzCode:       "xxxx",
+		CodeExpiration:  time.Now().Local().Add(time.Minute * time.Duration(codeExpirationDuration)),
+		RefreshToken:    "",
+		AuthzRevision:   0,
+	}, nil
 }
 
 func (a *AuthorizationInfo) isCodeUnExpired() bool {

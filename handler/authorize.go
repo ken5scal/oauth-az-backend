@@ -18,7 +18,10 @@ func NewAuthzHandler(r domain.AuthzInfoRepository) *authzHandler {
 
 // RequestAuthz assumes user-agent is a web browser
 func (h *authzHandler) RequestAuthz(w http.ResponseWriter, r *http.Request) {
+	azInfoBuilder := domain.AuthorizationInfoBuilder(nil)
 
+	w.WriteHeader(http.StatusFound)
+	w.Header().Add("Location", "https://client.example.com/cb?code=SplxlOBeZQQYbYS6WxSbIA&state=xyz")
 }
 
 func (h *authzHandler) GenerateAuthzCode() (*domain.AuthorizationInfo, error) {

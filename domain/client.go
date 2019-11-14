@@ -34,20 +34,20 @@ type client struct {
 	authzRevision int
 }
 
-type builder struct {
+type clientBuilder struct {
 	clientType string
 }
 
-func newClientBuilder() *builder {
-	return &builder{}
+func newClientBuilder() *clientBuilder {
+	return &clientBuilder{}
 }
 
-func (cb *builder) ClientType(clientType clientType) *builder {
+func (cb *clientBuilder) ClientType(clientType clientType) *clientBuilder {
 	cb.clientType = clientType.String()
 	return cb
 }
 
-func (cb *builder) Build() (c *client, err error) {
+func (cb *clientBuilder) Build() (c *client, err error) {
 	if !isClientTypeValid(cb.clientType) {
 		return nil, ErrInvalidClientType
 	}
