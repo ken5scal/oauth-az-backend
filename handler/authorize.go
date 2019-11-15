@@ -18,6 +18,8 @@ func NewAuthzHandler(r domain.AuthzInfoRepository) *authzHandler {
 
 // RequestAuthz assumes user-agent is a web browser
 func (h *authzHandler) RequestAuthz(w http.ResponseWriter, r *http.Request) {
+	// TODO Verify the identity of the resource owner
+	// https://tools.ietf.org/html/rfc6749#section-3.1
 	azInfoBuilder := domain.AuthorizationInfoBuilder(nil)
 
 	w.WriteHeader(http.StatusFound)

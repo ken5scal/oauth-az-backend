@@ -87,7 +87,10 @@ func main() {
 
 	r := mux.NewRouter()
 	r.HandleFunc("/", fuga)
-	r.HandleFunc("/authorize", handler.NewAuthzHandler(authzRepo).RequestAuthz)
+	// https://tools.ietf.org/html/rfc6749#section-3.1
+	// URI  MUST NOT include a fragment component.
+	// MUST support the use of the HTTP "GET" method
+	r.HandleFunc("/authorize", handler.NewAuthzHandler(authzRepo).RequestAuthz).Methods(http.MethodGet)
 	r.HandleFunc("/token", handler.NewTokenHandler(tokenRepo).RequestToken)
 	srv := &http.Server{
 		Addr:    addr + ":" + port,

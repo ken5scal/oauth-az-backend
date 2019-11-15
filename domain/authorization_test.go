@@ -26,6 +26,9 @@ func TestGeneratingAuthorizationCode(t *testing.T) {
 		redirectUri, _ := url.Parse("https://client.example.com/cb")
 		az, _ := builder.RedirectUri(redirectUri).Build()
 		if az.redirectUri != redirectUri {
+			if az.redirectUri.RawQuery == "" {
+				t.Errorf("wanted a redirect Uri, but didn't get one")
+			}
 			t.Errorf("got redirect Uri %v but wanted %v", az.redirectUri, redirectUri)
 		}
 	})
@@ -36,7 +39,4 @@ func TestGeneratingAuthorizationCode(t *testing.T) {
 			t.Errorf("wanted a state %v, but got %v", az.state, builder.state)
 		}
 	})
-	//if az.state != "" && hoge.state == "" {
-	//	t.Errorf("wanted a state but didn't get one")
-	//}
 }
