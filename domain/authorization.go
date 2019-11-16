@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"net/url"
+	"strings"
 	"time"
 )
 
@@ -16,6 +17,8 @@ const (
 	InvalidScope               = "invalid_scope"
 	ServerError                = "server_error"
 	TemporarilyUnavailable     = "temporarily_unavailable"
+
+	ResponseTypeCode = "code"
 )
 
 // AuthorizationInfo is authorized info that RO granted to the RP
@@ -60,16 +63,12 @@ type authorization struct {
 
 // AuthorizationInfoBuilder takes two arguments required for Authorization Request
 // https://tools.ietf.org/html/rfc6749#section-4.1.1
-func AuthorizationInfoBuilder(responseType, clientId string) *authorizationBuilder {
+func AuthorizationInfoBuilder(responseType, clientId string, redirect *url.URL) *authorizationBuilder {
 	return &authorizationBuilder{
 		responseType: responseType,
 		clientId:     clientId,
+		redirectUri:  redirect,
 	}
-}
-
-func (builder *authorizationBuilder) RedirectUri(redirectUri *url.URL) *authorizationBuilder {
-	builder.redirectUri = redirectUri
-	return builder
 }
 
 func (builder *authorizationBuilder) Scope(scope string) *authorizationBuilder {
@@ -88,12 +87,31 @@ func generateAuthorizationCode(length int) string {
 	return base64.StdEncoding.EncodeToString(b)[:length]
 }
 
-func (builder *authorizationBuilder) Build() (*authorization, error) {
-	if builder.responseType != "code" {
+// Build generates authorization Request
+// redirectUris is registered client's redirection endpoints
+func (builder *authorizationBuilder) Build(clientRedirectEPs []string) (*authorization, error) {
+	if builder.responseType == "" {
 		return nil, errors.New(InvalidRequest)
 	}
 
+	for _, v := range strings.Fields(builder.responseType) {
+		if v == "code" {
+			break
+		}
+
+		return nil, errors.New(UnsupportedResponseType)
+	}
+
 	if builder.clientId == "" {
+		return nil, errors.New(InvalidRequest)
+	}
+
+	u := builder.redirectUri
+	for _, v := range clientRedirectEPs {
+		if v == u.Scheme+"://"+u.Host+u.Path {
+			break
+		}
+
 		return nil, errors.New(InvalidRequest)
 	}
 

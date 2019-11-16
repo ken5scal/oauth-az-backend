@@ -1,5 +1,8 @@
 # oauth-az-backend
 
+This is an OAuth2.0 based authorization server using the Authorization Code flow filling "Must" and "Should" requirement.
+
+
 # Package Structure
 
 This repository is constructed using Go's `Flat Package Architecture`.
