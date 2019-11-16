@@ -84,7 +84,7 @@ func (builder *authorizationBuilder) State(state string) *authorizationBuilder {
 func generateAuthorizationCode(length int) string {
 	b := make([]byte, length)
 	rand.Read(b)
-	return base64.StdEncoding.EncodeToString(b)[:length]
+	return base64.StdEncoding.EncodeToString(b)
 }
 
 // Build generates authorization Request
@@ -94,8 +94,11 @@ func (builder *authorizationBuilder) Build(clientRedirectEPs []string) (*authori
 		return nil, errors.New(InvalidRequest)
 	}
 
+	// responseType can contain multiple type separated by whitespace
+	// https://openid.net/specs/openid-connect-core-1_0.html#AuthorizationExamples
+	// ex: code id_token
 	for _, v := range strings.Fields(builder.responseType) {
-		if v == "code" {
+		if v == ResponseTypeCode {
 			break
 		}
 
@@ -106,9 +109,9 @@ func (builder *authorizationBuilder) Build(clientRedirectEPs []string) (*authori
 		return nil, errors.New(InvalidRequest)
 	}
 
-	u := builder.redirectUri
+	// Redirect Endpoints can have multiple values
 	for _, v := range clientRedirectEPs {
-		if v == u.Scheme+"://"+u.Host+u.Path {
+		if v == builder.redirectUri.Scheme+"://"+builder.redirectUri.Host+builder.redirectUri.Path {
 			break
 		}
 
@@ -116,7 +119,7 @@ func (builder *authorizationBuilder) Build(clientRedirectEPs []string) (*authori
 	}
 
 	return &authorization{
-		code:        generateAuthorizationCode(lengthEnoughForEntropy),
+		code:        generateAuthorizationCode(26),
 		state:       builder.state,
 		redirectUri: builder.redirectUri,
 	}, nil

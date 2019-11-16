@@ -7,7 +7,7 @@ import (
 
 var wantedClientEndpoints = []string{"https://example.com/cb"}
 
-func TestGeneratingInvalidAuthorizaionResponse(t *testing.T) {
+func TestGeneratingInvalidAuthorizationResponse(t *testing.T) {
 	redirectUri, _ := url.ParseRequestURI(wantedClientEndpoints[0])
 
 	// https://tools.ietf.org/html/rfc6749#section-3.1.1
@@ -57,12 +57,9 @@ func TestGeneratingAuthorizationCode(t *testing.T) {
 
 	// https://tools.ietf.org/html/rfc6749#section-4.1.2
 	t.Run("generate simple auth code", func(t *testing.T) {
-		az, err := builder.Build(wantedClientEndpoints)
-		if err != nil {
+		if az, err := builder.Build(wantedClientEndpoints); err != nil {
 			t.Errorf("got an error %v but didn't want one", err.Error())
-		}
-
-		if az.code == "" {
+		} else if az.code == "" {
 			t.Errorf("wanted a code but didn't get one")
 		}
 	})
