@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"errors"
 	"net/url"
-	"strings"
 	"time"
 )
 
@@ -18,8 +17,21 @@ const (
 	ServerError                = "server_error"
 	TemporarilyUnavailable     = "temporarily_unavailable"
 
-	ResponseTypeCode = "code"
+	responseTypeCode        = "code"
+	responseTypeCodeIdToken = "code id_token"
 )
+
+func isValidType(t string) error {
+	if t == "" {
+		return errors.New(InvalidRequest)
+	}
+
+	if t != responseTypeCode && t != responseTypeCodeIdToken {
+		return errors.New(UnsupportedResponseType)
+	}
+
+	return nil
+}
 
 // AuthorizationInfo is authorized info that RO granted to the RP
 // so this is tied to user
@@ -61,13 +73,23 @@ type authorization struct {
 	redirectUri *url.URL
 }
 
+type authorizationError struct {
+	error
+	state string
+}
+
+func (a authorizationError) Error() string {
+	return a.error.Error()
+}
+
 // AuthorizationInfoBuilder takes two arguments required for Authorization Request
 // https://tools.ietf.org/html/rfc6749#section-4.1.1
-func AuthorizationInfoBuilder(responseType, clientId string, redirect *url.URL) *authorizationBuilder {
+func AuthorizationInfoBuilder(responseType, clientId, state string, redirect *url.URL) *authorizationBuilder {
 	return &authorizationBuilder{
 		responseType: responseType,
 		clientId:     clientId,
 		redirectUri:  redirect,
+		state:        state,
 	}
 }
 
@@ -87,35 +109,28 @@ func generateAuthorizationCode(length int) string {
 	return base64.StdEncoding.EncodeToString(b)
 }
 
+func (builder *authorizationBuilder) formRedirectionEndpoint() string {
+	return builder.redirectUri.Scheme + "://" + builder.redirectUri.Host + builder.redirectUri.Path
+}
+
 // Build generates authorization Request Model
 // redirectUris is registered client's redirection endpoints
 func (builder *authorizationBuilder) Build(clientRedirectEPs []string) (*authorization, error) {
-	if builder.responseType == "" {
-		return nil, errors.New(InvalidRequest)
+	if builder.clientId == "" || builder.redirectUri == nil || builder.state == "" {
+		return nil, authorizationError{error: errors.New(InvalidRequest), state: builder.state}
 	}
 
-	// responseType can contain multiple type separated by whitespace
-	// https://openid.net/specs/openid-connect-core-1_0.html#AuthorizationExamples
-	// ex: code id_token
-	for _, v := range strings.Fields(builder.responseType) {
-		if v == ResponseTypeCode {
-			break
-		}
-
-		return nil, errors.New(UnsupportedResponseType)
-	}
-
-	if builder.clientId == "" {
-		return nil, errors.New(InvalidRequest)
+	if err := isValidType(builder.responseType); err != nil {
+		return nil, authorizationError{error: err, state: builder.state}
 	}
 
 	// Redirect Endpoints can have multiple values
 	for _, v := range clientRedirectEPs {
-		if v == builder.redirectUri.Scheme+"://"+builder.redirectUri.Host+builder.redirectUri.Path {
+		if v == builder.formRedirectionEndpoint() {
 			break
 		}
 
-		return nil, errors.New(InvalidRequest)
+		return nil, authorizationError{error: errors.New(InvalidRequest), state: builder.state}
 	}
 
 	return &authorization{
