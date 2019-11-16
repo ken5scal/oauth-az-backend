@@ -87,7 +87,7 @@ func generateAuthorizationCode(length int) string {
 	return base64.StdEncoding.EncodeToString(b)
 }
 
-// Build generates authorization Request
+// Build generates authorization Request Model
 // redirectUris is registered client's redirection endpoints
 func (builder *authorizationBuilder) Build(clientRedirectEPs []string) (*authorization, error) {
 	if builder.responseType == "" {
