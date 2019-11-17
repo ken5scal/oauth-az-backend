@@ -17,20 +17,19 @@ var returnFakeUri = false
 func TestHandlingInvalidAuthorizationRequest(t *testing.T) {
 	returnFakeUri = true
 	request, _ := http.NewRequest(http.MethodGet, "/authorize", nil)
+	response := httptest.NewRecorder()
 
 	q := url.Values{}
 	q.Add(authzRequestParamClientId, clientId)
 	q.Add(authzRequestParamState, state)
 	q.Add(authzRequestParamRedirectUri, redirectUri)
+	request.URL.RawQuery = q.Encode()
 
 	server := http.NewServeMux()
 	server.HandleFunc("/authorize", NewAuthzHandler(&DummyRepository{}).RequestAuthz)
+	server.ServeHTTP(response, request)
 
 	t.Run("request with empty response type", func(t *testing.T) {
-		request.URL.RawQuery = q.Encode()
-		response := httptest.NewRecorder()
-
-		server.ServeHTTP(response, request)
 		if response.Code != http.StatusBadRequest {
 			t.Errorf("wanted http statsu code %v, but got %v", http.StatusBadRequest, response.Code)
 		}
@@ -42,7 +41,7 @@ func TestHandlingInvalidAuthorizationRequest(t *testing.T) {
 	t.Run("request with unsupported response type", func(t *testing.T) {
 		q.Add(authzRequestParamResponseType, "fake"+responseType)
 		request.URL.RawQuery = q.Encode()
-		response := httptest.NewRecorder()
+		response = httptest.NewRecorder()
 
 		server.ServeHTTP(response, request)
 		if response.Code != http.StatusBadRequest {
@@ -57,7 +56,7 @@ func TestHandlingInvalidAuthorizationRequest(t *testing.T) {
 		q.Set(authzRequestParamResponseType, responseType)
 		q.Set(authzRequestParamRedirectUri, "i'm broken redirect uri")
 		request.URL.RawQuery = q.Encode()
-		response := httptest.NewRecorder()
+		response = httptest.NewRecorder()
 
 		server.ServeHTTP(response, request)
 		if response.Code != http.StatusInternalServerError {
@@ -103,6 +102,10 @@ func TestAuthorizationHeader(t *testing.T) {
 		// https://tools.ietf.org/html/rfc6749#section-4.1.2
 		if u.Query().Get(authzRequestParamCode) == "" {
 			t.Error("code parameter in authorization response is required")
+		}
+
+		if u.Query().Get("error") != "" {
+			t.Error("got an error parameter but didn't want one")
 		}
 
 		// https://tools.ietf.org/html/rfc6749#section-4.1.2
