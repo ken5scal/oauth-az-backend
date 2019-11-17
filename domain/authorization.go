@@ -100,11 +100,6 @@ func (builder *authorizationBuilder) Scope(scope string) *authorizationBuilder {
 	return builder
 }
 
-func (builder *authorizationBuilder) State(state string) *authorizationBuilder {
-	builder.state = state
-	return builder
-}
-
 func generateAuthorizationCode(length int) string {
 	b := make([]byte, length)
 	rand.Read(b)
@@ -185,6 +180,7 @@ func (a *AuthorizationInfo) isRefreshTokenValid() bool {
 type AuthzInfoRepository interface {
 	GetAuthzInfoForAccessToken(clientID, userID string) (*AuthorizationInfo, error)
 	GetAuthzInfoByID(authzInfoID string) (*AuthorizationInfo, error)
+	GetClientInfoByID(clientID string) (*AuthorizationInfo, error)
 	Insert(t *AuthorizationInfo) error
 	Update(t *AuthorizationInfo) error
 	Delete(t *AuthorizationInfo) error

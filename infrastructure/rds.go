@@ -72,6 +72,10 @@ func (a *AuthzInfoRepositoryImpl) GetAuthzInfoByID(authzInfoID string) (*domain.
 	return nil, nil
 }
 
+func (a *AuthzInfoRepositoryImpl) GetClientInfoByID(clientID string) (*domain.AuthorizationInfo, error) {
+	return nil, nil
+}
+
 func (a *AuthzInfoRepositoryImpl) Insert(t *domain.AuthorizationInfo) error {
 	return nil
 }

@@ -36,7 +36,8 @@ func (h *authzHandler) RequestAuthz(w http.ResponseWriter, r *http.Request) {
 	params := r.URL.Query()
 	clientId := params.Get("client_id")
 	// Todo get client's registered redirection endpoint from data store
-	clientRedirectEps := []string{"hoge", "fuga"}
+	azInfo, _ := h.repo.GetClientInfoByID(clientId)
+	clientRedirectEps := []string{azInfo.RedirectUri}
 	redirectUri, err := url.ParseRequestURI(params.Get("redirect_uri"))
 
 	if err != nil {
@@ -49,6 +50,7 @@ func (h *authzHandler) RequestAuthz(w http.ResponseWriter, r *http.Request) {
 	if err := builder.Verify(clientRedirectEps); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		_, _ = w.Write([]byte(err.Error()))
+		return
 	}
 
 	//if err != nil {

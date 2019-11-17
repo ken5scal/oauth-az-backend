@@ -12,12 +12,13 @@ var responseType = "code"
 var clientId = "s6BhdRkqt3"
 var state = "xyz"
 var redirectUri = "https://client.example.com/cb"
+var returnFakeUri = false
 
 func TestHandlingInvalidAuthorizationRequest(t *testing.T) {
+	returnFakeUri = true
 	request, _ := http.NewRequest(http.MethodGet, "/authorize", nil)
 
 	q := url.Values{}
-	//q.Add("response_type", "fake"+responseType)
 	q.Add("client_id", clientId)
 	q.Add("state", state)
 	q.Add("redirect_uri", redirectUri)
@@ -72,46 +73,39 @@ func TestAuthorizationHeader(t *testing.T) {
 	request, _ := http.NewRequest(http.MethodGet, "/authorize", nil)
 	response := httptest.NewRecorder()
 
-	t.Run("returns Authorization error response if request is invalid", func(t *testing.T) {
+	q := url.Values{}
+	q.Add("client_id", clientId)
+	q.Add("state", state)
+	q.Add("redirect_uri", redirectUri)
+	q.Add("response_type", "code")
+	request.URL.RawQuery = q.Encode()
 
-	})
+	server := http.NewServeMux()
+	server.HandleFunc("/authorize", NewAuthzHandler(&DummyRepository{}).RequestAuthz)
 
 	t.Run("returns Authorization success response", func(t *testing.T) {
-		requiredParams := map[string]string{
-			"response_type": "code",
-			"client_id":     "s6BhdRkqt3",
-			"redirect_uri":  "https://client.example.com/cb",
-			//scope
-			//state
-		}
-		//t.Errorf("did not get correct status, got %d, want %d", response.Code, http.StatusFound)
-		q := request.URL.Query()
-		for k, v := range requiredParams {
-			q.Add(k, v)
-		}
-		request.URL.RawQuery = q.Encode()
-
-		server := http.NewServeMux()
-		handler := NewAuthzHandler(&DummyRepository{})
-		server.HandleFunc("/authorize", handler.RequestAuthz)
 		server.ServeHTTP(response, request)
+
+		if response.Code != http.StatusFound {
+			t.Errorf("got http statsu code %v, but wanted %v", response.Code, http.StatusFound)
+		}
 
 		u, err := url.Parse(response.Header().Get("Location"))
 		if err != nil {
 			t.Errorf("got an error when parsing authorization response's location header: %v", err)
 		}
 
-		redirectUri := u.Scheme + "://" + u.Host + u.Path
-		if redirectUri != requiredParams["redirect_uri"] {
-			t.Errorf("did not get correct redirect url, got %v, want %v", redirectUri, requiredParams["redirect_uri"])
+		redirectUriInResponse := u.Scheme + "://" + u.Host + u.Path
+		if redirectUriInResponse != redirectUri {
+			t.Errorf("got redirect uri %v, but wanted %v", redirectUriInResponse, redirectUri)
 		}
 
+		// https://tools.ietf.org/html/rfc6749#section-4.1.2
 		if u.Query().Get("code") == "" {
 			t.Error("code parameter in authorization response is required")
 		}
 
-		// state is required iff state parameter was present in the request
-		// RFC 6749 RECOMMENDS it
+		// https://tools.ietf.org/html/rfc6749#section-4.1.2
 		if q.Get("state") != "" {
 			state := u.Query().Get("state")
 			if state == "" {
@@ -134,6 +128,15 @@ func (r *DummyRepository) GetAuthzInfoForAccessToken(clientID, userID string) (*
 
 func (r *DummyRepository) GetAuthzInfoByID(authzInfoID string) (*domain.AuthorizationInfo, error) {
 	return nil, nil
+}
+
+func (r *DummyRepository) GetClientInfoByID(authzInfoID string) (*domain.AuthorizationInfo, error) {
+	azInfo := &domain.AuthorizationInfo{RedirectUri: redirectUri}
+	if returnFakeUri {
+		azInfo.RedirectUri = "fake" + redirectUri
+		return azInfo, nil
+	}
+	return azInfo, nil
 }
 
 func (r *DummyRepository) Insert(t *domain.AuthorizationInfo) error {
