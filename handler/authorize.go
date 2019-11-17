@@ -38,18 +38,19 @@ func (h *authzHandler) RequestAuthz(w http.ResponseWriter, r *http.Request) {
 	// Todo get client's registered redirection endpoint from data store
 	clientRedirectEps := []string{"hoge", "fuga"}
 	redirectUri, err := url.ParseRequestURI(params.Get("redirect_uri"))
+
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		_, _ = w.Write([]byte(err.Error()))
+		return
 	}
 
-	az, err := domain.AuthorizationInfoBuilder(params.Get("response_type"), clientId, params.Get("state"), redirectUri).Build(clientRedirectEps)
-	if err != nil {
+	builder := domain.AuthorizationInfoBuilder(params.Get("response_type"), clientId, params.Get("state"), redirectUri)
+	if err := builder.Verify(clientRedirectEps); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		_, _ = w.Write([]byte(err.Error()))
 	}
 
-	fmt.Println(az)
 	//if err != nil {
 	// https://tools.ietf.org/html/rfc6749#section-4.1.2.1
 	// ex:  HTTP/1.1 302 Found
@@ -63,6 +64,7 @@ func (h *authzHandler) RequestAuthz(w http.ResponseWriter, r *http.Request) {
 	// TODO Do Authentication (Verify the identity of the resource owner) // https://tools.ietf.org/html/rfc6749#section-3.1
 	// TODO Obtain Authorization Decision
 	// TODO Directs the user-agent with Authorization Response
+	// builder.Build
 	//r, _ := h.repo.(*infrastructure.AuthzInfoRepositoryImpl)
 	//r.BeginTransaction()
 	//

@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"net/url"
+	"strings"
 	"time"
 )
 
@@ -68,9 +69,10 @@ type authorizationBuilder struct {
 }
 
 type authorization struct {
-	code        string
-	state       string
-	redirectUri *url.URL
+	code           string
+	codeExpiration time.Time
+	state          string
+	redirectUri    *url.URL
 }
 
 type authorizationError struct {
@@ -113,15 +115,19 @@ func (builder *authorizationBuilder) formRedirectionEndpoint() string {
 	return builder.redirectUri.Scheme + "://" + builder.redirectUri.Host + builder.redirectUri.Path
 }
 
-// Build generates authorization Request Model
-// redirectUris is registered client's redirection endpoints
-func (builder *authorizationBuilder) Build(clientRedirectEPs []string) (*authorization, error) {
+func (builder *authorizationBuilder) Verify(clientRedirectEPs []string) error {
 	if builder.clientId == "" || builder.redirectUri == nil || builder.state == "" {
-		return nil, authorizationError{error: errors.New(InvalidRequest), state: builder.state}
+		return authorizationError{error: errors.New(InvalidRequest), state: builder.state}
+	}
+
+	if strings.Contains(builder.redirectUri.String(), "#") {
+		// the redirection endpoint must not include a fragement component
+		// https://tools.ietf.org/html/rfc6749#section-3.1.2
+		return authorizationError{error: errors.New(InvalidRequest), state: builder.state}
 	}
 
 	if err := isValidType(builder.responseType); err != nil {
-		return nil, authorizationError{error: err, state: builder.state}
+		return authorizationError{error: err, state: builder.state}
 	}
 
 	// Redirect Endpoints can have multiple values
@@ -130,14 +136,21 @@ func (builder *authorizationBuilder) Build(clientRedirectEPs []string) (*authori
 			break
 		}
 
-		return nil, authorizationError{error: errors.New(InvalidRequest), state: builder.state}
+		return authorizationError{error: errors.New(InvalidRequest), state: builder.state}
 	}
 
+	return nil
+}
+
+// Build generates authorization Request Model
+// redirectUris is registered client's redirection endpoints
+func (builder *authorizationBuilder) Build() *authorization {
 	return &authorization{
-		code:        generateAuthorizationCode(26),
-		state:       builder.state,
-		redirectUri: builder.redirectUri,
-	}, nil
+		code:           generateAuthorizationCode(26),
+		codeExpiration: time.Now().Local().Add(time.Minute * time.Duration(codeExpirationDuration)),
+		state:          builder.state,
+		redirectUri:    builder.redirectUri,
+	}
 	//return &AuthorizationInfo{
 	//	AuthorizationId: "",
 	//	ClientId:        "",
