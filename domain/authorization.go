@@ -146,17 +146,15 @@ func (builder *authorizationBuilder) Build() *authorization {
 		state:          builder.state,
 		redirectUri:    builder.redirectUri,
 	}
-	//return &AuthorizationInfo{
-	//	AuthorizationId: "",
-	//	ClientId:        "",
-	//	UserId:          "",
-	//	Scope:           nil,
-	//	RedirectUri:     "",
-	//	AuthzCode:       "xxxx",
-	//	CodeExpiration:  time.Now().Local().Add(time.Minute * time.Duration(codeExpirationDuration)),
-	//	RefreshToken:    "",
-	//	AuthzRevision:   0,
-	//}, nil
+}
+
+func (az *authorization) ReturnRedirectionEndpoint() string {
+	q, _ := url.ParseQuery(az.redirectUri.RawQuery)
+	q.Add("code", az.code)
+	q.Add("state", az.state)
+	az.redirectUri.RawQuery = q.Encode()
+
+	return az.redirectUri.String()
 }
 
 func (a *AuthorizationInfo) isCodeUnExpired() bool {

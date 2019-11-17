@@ -122,7 +122,7 @@ func TestValidAuthorizationRequest(t *testing.T) {
 
 	// https://tools.ietf.org/html/rfc6749#section-4.1.2
 	t.Run("check state holds the same value", func(t *testing.T) {
-		az := builder.State("xyz").Build()
+		az := builder.Build()
 		if az.state == "" && az.state != builder.state {
 			t.Errorf("wanted a state %v, but got %v", az.state, builder.state)
 		}
@@ -138,4 +138,20 @@ func TestValidAuthorizationRequest(t *testing.T) {
 			t.Errorf("got redirect Uri %v but wanted %v", az.redirectUri, redirectUri)
 		}
 	})
+}
+
+func Test_authorization_ReturnRedirectionEndpoint(t *testing.T) {
+	u, _ := url.ParseRequestURI("https://client.example.com/cb")
+	az := &authorization{
+		code:        "SplxlOBeZQQYbYS6WxSbIA",
+		state:       "xyz",
+		redirectUri: u,
+	}
+
+	got := az.ReturnRedirectionEndpoint()
+	expected := "https://client.example.com/cb?code=SplxlOBeZQQYbYS6WxSbIA&state=xyz"
+
+	if got != expected {
+		t.Errorf("ReturnRedirectionEndpoint() = %v, want %v", got, expected)
+	}
 }

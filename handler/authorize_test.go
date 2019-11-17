@@ -19,9 +19,9 @@ func TestHandlingInvalidAuthorizationRequest(t *testing.T) {
 	request, _ := http.NewRequest(http.MethodGet, "/authorize", nil)
 
 	q := url.Values{}
-	q.Add("client_id", clientId)
-	q.Add("state", state)
-	q.Add("redirect_uri", redirectUri)
+	q.Add(authzRequestParamClientId, clientId)
+	q.Add(authzRequestParamState, state)
+	q.Add(authzRequestParamRedirectUri, redirectUri)
 
 	server := http.NewServeMux()
 	server.HandleFunc("/authorize", NewAuthzHandler(&DummyRepository{}).RequestAuthz)
@@ -40,7 +40,7 @@ func TestHandlingInvalidAuthorizationRequest(t *testing.T) {
 	})
 
 	t.Run("request with unsupported response type", func(t *testing.T) {
-		q.Add("response_type", "fake"+responseType)
+		q.Add(authzRequestParamResponseType, "fake"+responseType)
 		request.URL.RawQuery = q.Encode()
 		response := httptest.NewRecorder()
 
@@ -54,8 +54,8 @@ func TestHandlingInvalidAuthorizationRequest(t *testing.T) {
 	})
 
 	t.Run("request with invalid redirect uri", func(t *testing.T) {
-		q.Set("response_type", responseType)
-		q.Set("redirect_uri", "i'm broken redirect uri")
+		q.Set(authzRequestParamResponseType, responseType)
+		q.Set(authzRequestParamRedirectUri, "i'm broken redirect uri")
 		request.URL.RawQuery = q.Encode()
 		response := httptest.NewRecorder()
 
@@ -74,10 +74,10 @@ func TestAuthorizationHeader(t *testing.T) {
 	response := httptest.NewRecorder()
 
 	q := url.Values{}
-	q.Add("client_id", clientId)
-	q.Add("state", state)
-	q.Add("redirect_uri", redirectUri)
-	q.Add("response_type", "code")
+	q.Add(authzRequestParamClientId, clientId)
+	q.Add(authzRequestParamState, state)
+	q.Add(authzRequestParamRedirectUri, redirectUri)
+	q.Add(authzRequestParamResponseType, "code")
 	request.URL.RawQuery = q.Encode()
 
 	server := http.NewServeMux()
@@ -101,18 +101,15 @@ func TestAuthorizationHeader(t *testing.T) {
 		}
 
 		// https://tools.ietf.org/html/rfc6749#section-4.1.2
-		if u.Query().Get("code") == "" {
+		if u.Query().Get(authzRequestParamCode) == "" {
 			t.Error("code parameter in authorization response is required")
 		}
 
 		// https://tools.ietf.org/html/rfc6749#section-4.1.2
-		if q.Get("state") != "" {
-			state := u.Query().Get("state")
-			if state == "" {
+		if q.Get(authzRequestParamState) != "" {
+			if state := u.Query().Get(authzRequestParamState); state == "" {
 				t.Error("state parameter in authorization response is required")
-			}
-
-			if state != q.Get("state") {
+			} else if state != q.Get(authzRequestParamState) {
 				t.Errorf("did not get correct status, got %s, want %s", state, q.Get("state"))
 			}
 		}
