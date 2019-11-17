@@ -82,11 +82,9 @@ func main() {
 	// assuming administrative requests from frontend
 	allowedOrigins := handlers.AllowedOrigins([]string{"http://localhost:3000"})
 	allowedHeaders := handlers.AllowedHeaders([]string{"Content-Type"})
-	// Options is for CORS preflight
 	allowedMethods := handlers.AllowedMethods([]string{http.MethodOptions, http.MethodGet, http.MethodPost})
 
 	r := mux.NewRouter()
-	r.HandleFunc("/", fuga)
 	// https://tools.ietf.org/html/rfc6749#section-3.1
 	// URI  MUST NOT include a fragment component.
 	// MUST support the use of the HTTP "GET" method
@@ -99,8 +97,4 @@ func main() {
 	log.Fatal(srv.ListenAndServe())
 
 	//bcrypt.CompareHashAndPassword()
-}
-
-func fuga(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "fuga")
 }

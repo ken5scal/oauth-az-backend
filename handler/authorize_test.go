@@ -8,6 +8,62 @@ import (
 	"testing"
 )
 
+var responseType = "code"
+var clientId = "s6BhdRkqt3"
+var state = "xyz"
+var redirectUri = "https://client.example.com/cb"
+
+func TestHandlingInvalidAuthorizationRequest(t *testing.T) {
+	request, _ := http.NewRequest(http.MethodGet, "/authorize", nil)
+	response := httptest.NewRecorder()
+
+	q := url.Values{}
+	//q.Add("response_type", "fake"+responseType)
+	q.Add("client_id", clientId)
+	q.Add("state", state)
+	q.Add("redirect_uri", redirectUri)
+
+	server := http.NewServeMux()
+	server.HandleFunc("/authorize", NewAuthzHandler(&DummyRepository{}).RequestAuthz)
+
+	t.Run("request with empty response type", func(t *testing.T) {
+		request.URL.RawQuery = q.Encode()
+		server.ServeHTTP(response, request)
+		if response.Code != http.StatusBadRequest {
+			t.Errorf("wanted http statsu code %v, but got %v", http.StatusBadRequest, response.Code)
+		}
+		if response.Body == nil {
+			t.Error("wanted an error in response, but got none")
+		}
+	})
+
+	t.Run("request with unsupported response type", func(t *testing.T) {
+		q.Add("response_type", "fake"+responseType)
+		request.URL.RawQuery = q.Encode()
+		server.ServeHTTP(response, request)
+		if response.Code != http.StatusBadRequest {
+			t.Errorf("wanted http statsu code %v, but got %v", http.StatusBadRequest, response.Code)
+		}
+		if response.Body == nil {
+			t.Error("wanted an error in response, but got none")
+		}
+	})
+
+	t.Run("request with broken redirect uri", func(t *testing.T) {
+		q.Set("response_type", responseType)
+		q.Set("redirect_uri", "i'm broken redirect uri")
+		request.URL.RawQuery = q.Encode()
+		server.ServeHTTP(response, request)
+		if response.Code != http.StatusInternalServerError {
+			t.Errorf("wanted http statsu code %v, but got %v", http.StatusInternalServerError, response.Code)
+		}
+		if response.Body == nil {
+			t.Error("wanted an error in response, but got none")
+		}
+	})
+
+}
+
 func TestAuthorizationHeader(t *testing.T) {
 	request, _ := http.NewRequest(http.MethodGet, "/authorize", nil)
 	response := httptest.NewRecorder()
@@ -24,7 +80,7 @@ func TestAuthorizationHeader(t *testing.T) {
 			//scope
 			//state
 		}
-
+		t.Errorf("did not get correct status, got %d, want %d", response.Code, http.StatusFound)
 		q := request.URL.Query()
 		for k, v := range requiredParams {
 			q.Add(k, v)
@@ -35,10 +91,6 @@ func TestAuthorizationHeader(t *testing.T) {
 		handler := NewAuthzHandler(&DummyRepository{})
 		server.HandleFunc("/authorize", handler.RequestAuthz)
 		server.ServeHTTP(response, request)
-
-		if response.Code != http.StatusFound {
-			t.Errorf("did not get correct status, got %d, want %d", response.Code, http.StatusFound)
-		}
 
 		u, err := url.Parse(response.Header().Get("Location"))
 		if err != nil {

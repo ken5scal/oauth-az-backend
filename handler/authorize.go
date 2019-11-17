@@ -1,9 +1,11 @@
 package handler
 
 import (
+	"fmt"
 	"github.com/ken5scal/oauth-az/domain"
-	"github.com/ken5scal/oauth-az/infrastructure"
 	"net/http"
+	"net/url"
+	"reflect"
 )
 
 type authzHandler struct {
@@ -16,41 +18,66 @@ func NewAuthzHandler(r domain.AuthzInfoRepository) *authzHandler {
 	return h
 }
 
+// Check Duplicated query parameter
+// https://tools.ietf.org/html/rfc6749#section-3.1.2
+func isQueryParameterDuplicated(queryValues url.Values) bool {
+	fmt.Println(queryValues)
+	fmt.Println(len(queryValues.Get("redirect_uri")))
+	fmt.Println(reflect.TypeOf(queryValues.Get("redirect_uri")).String())
+	return reflect.TypeOf(queryValues.Get("redirect_uri")).String() == "[]string" ||
+		reflect.TypeOf(queryValues.Get("client_id")).String() == "[]string" ||
+		reflect.TypeOf(queryValues.Get("state")).String() == "[]string" ||
+		reflect.TypeOf(queryValues.Get("response_type")).String() == "[]string"
+}
+
 // RequestAuthz assumes user-agent is a web browser
 func (h *authzHandler) RequestAuthz(w http.ResponseWriter, r *http.Request) {
 	// Check Authorization request
-	az, err := domain.AuthorizationInfoBuilder(nil).Build(clietntRedirectEPs)
+	params := r.URL.Query()
+	clientId := params.Get("client_id")
+	// Todo get client's registered redirection endpoint from data store
+	clientRedirectEps := []string{"hoge", "fuga"}
+	redirectUri, err := url.ParseRequestURI(params.Get("redirect_uri"))
 	if err != nil {
-		// https://tools.ietf.org/html/rfc6749#section-4.1.2.1
-		// ex:  HTTP/1.1 302 Found
-		//   Location: https://client.example.com/cb?error=access_denied&state=xyz
-		w.WriteHeader(http.StatusFound)
-		w.Write([]byte(err.Error()))
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = w.Write([]byte(err.Error()))
 	}
+
+	az, err := domain.AuthorizationInfoBuilder(params.Get("response_type"), clientId, params.Get("state"), redirectUri).Build(clientRedirectEps)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		_, _ = w.Write([]byte(err.Error()))
+	}
+
+	fmt.Println(az)
+	//if err != nil {
+	// https://tools.ietf.org/html/rfc6749#section-4.1.2.1
+	// ex:  HTTP/1.1 302 Found
+	//   Location: https://client.example.com/cb?error=access_denied&state=xyz
+	//w.WriteHeader(http.StatusFound)
+	//w.Write([]byte(err.Error()))
+	//}
+
+	// Golang Automatically handle duplicated
 
 	// TODO Do Authentication (Verify the identity of the resource owner) // https://tools.ietf.org/html/rfc6749#section-3.1
 	// TODO Obtain Authorization Decision
 	// TODO Directs the user-agent with Authorization Response
+	//r, _ := h.repo.(*infrastructure.AuthzInfoRepositoryImpl)
+	//r.BeginTransaction()
+	//
+	//azInfo := domain.AuthorizationInfoBuilder(nil)
+	//err := h.repo.Insert(azInfo)
+	//
+	//if err != nil {
+	//	r.Rollback()
+	//	return nil, err
+	//}
+	//r.Commit()
 
 	// https://tools.ietf.org/html/rfc6749#section-4.1.2
 	// ex: HTTP/1.1 302 Found
 	//     Location: https://client.example.com/cb?code=SplxlOBeZQQYbYS6WxSbIA &state=xyz
 	w.WriteHeader(http.StatusFound)
 	w.Header().Add("Location", "https://client.example.com/cb?code=SplxlOBeZQQYbYS6WxSbIA&state=xyz")
-}
-
-func (h *authzHandler) GenerateAuthzCode() (*domain.AuthorizationInfo, error) {
-	r, _ := h.repo.(*infrastructure.AuthzInfoRepositoryImpl)
-	r.BeginTransaction()
-
-	azInfo := domain.AuthorizationInfoBuilder(nil)
-	err := h.repo.Insert(azInfo)
-
-	if err != nil {
-		r.Rollback()
-		return nil, err
-	}
-	r.Commit()
-
-	return azInfo, nil
 }
