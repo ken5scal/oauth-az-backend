@@ -1,12 +1,31 @@
 package domain
 
 import (
+	"errors"
 	"net/url"
 	"testing"
 	"time"
 )
 
 var registeredClientEndpoints = []string{"https://example.com/cb"}
+var state = "xyz"
+
+func assertError(t *testing.T, got, want *authorizationError) {
+	t.Helper()
+	if want.state != "" {
+		if got.state == "" {
+			t.Errorf("wanted a state %v, but didn't get one", want.state)
+		} else if got.state != want.state {
+			t.Errorf("wanted a state %v, but got %v ", want.state, got.state)
+		}
+	}
+
+	if got == nil {
+		t.Errorf("wanted an error %v, but didn't get one", want.error)
+	} else if got.Error() != want.Error() {
+		t.Errorf("wanted an error %v, but got %v ", want.error, got.Error())
+	}
+}
 
 func TestInvalidAuthorizationRequest(t *testing.T) {
 	validRedirectUri, _ := url.ParseRequestURI(registeredClientEndpoints[0])
@@ -14,42 +33,30 @@ func TestInvalidAuthorizationRequest(t *testing.T) {
 	// https://tools.ietf.org/html/rfc6749#section-3.1.1
 	// https://tools.ietf.org/html/rfc6749#section-4.1.1
 	t.Run("request with empty responseType", func(t *testing.T) {
-		builder := AuthorizationInfoBuilder("", "clientId", "xyz", validRedirectUri)
-		if err := builder.Verify(registeredClientEndpoints); err == nil {
-			t.Errorf("wanted an error %v, but didn't get one", InvalidRequest)
-		} else if err.Error() != InvalidRequest {
-			t.Errorf("wanted an error %v, but got %v ", InvalidRequest, err.Error())
-		}
+		builder := AuthorizationInfoBuilder("", "clientId", state, validRedirectUri)
+		err := builder.Verify(registeredClientEndpoints)
+		assertError(t, err, &authorizationError{errors.New(InvalidRequest), state})
 	})
 
 	// https://tools.ietf.org/html/rfc6749#section-3.1.1
 	t.Run("request with unsupported responseType", func(t *testing.T) {
-		builder := AuthorizationInfoBuilder("fake", "clientId", "xyz", validRedirectUri)
-		if err := builder.Verify(registeredClientEndpoints); err == nil {
-			t.Errorf("wanted an error %v, but didn't get one", UnsupportedResponseType)
-		} else if err.Error() != UnsupportedResponseType {
-			t.Errorf("wanted an error %v, but got %v ", UnsupportedResponseType, err.Error())
-		}
+		builder := AuthorizationInfoBuilder("fake", "clientId", state, validRedirectUri)
+		err := builder.Verify(registeredClientEndpoints)
+		assertError(t, err, &authorizationError{errors.New(UnsupportedResponseType), state})
 	})
 
 	// https://tools.ietf.org/html/rfc6749#section-4.1.1
 	t.Run("request with empty clientId", func(t *testing.T) {
 		builder := AuthorizationInfoBuilder(responseTypeCode, "", "xyz", validRedirectUri)
-		if err := builder.Verify(registeredClientEndpoints); err == nil {
-			t.Errorf("wanted an error %v, but didn't get one", InvalidRequest)
-		} else if err.Error() != InvalidRequest {
-			t.Errorf("wanted an error %v, but got %v ", InvalidRequest, err.Error())
-		}
+		err := builder.Verify(registeredClientEndpoints)
+		assertError(t, err, &authorizationError{errors.New(InvalidRequest), state})
 	})
 
 	// https://tools.ietf.org/html/rfc6749#section-4.1.1
 	t.Run("request with empty state", func(t *testing.T) {
 		builder := AuthorizationInfoBuilder(responseTypeCode, "clientId", "", validRedirectUri)
-		if err := builder.Verify(registeredClientEndpoints); err == nil {
-			t.Errorf("wanted an error %v, but didn't get one", InvalidRequest)
-		} else if err.Error() != InvalidRequest {
-			t.Errorf("wanted an error %v, but got %v ", InvalidRequest, err.Error())
-		}
+		err := builder.Verify(registeredClientEndpoints)
+		assertError(t, err, &authorizationError{errors.New(InvalidRequest), ""})
 	})
 
 	// https://tools.ietf.org/html/rfc6749#section-4.1.1
@@ -57,22 +64,16 @@ func TestInvalidAuthorizationRequest(t *testing.T) {
 	// https://tools.ietf.org/html/rfc6749#section-3.1.2.2
 	t.Run("request with empty redirectUri", func(t *testing.T) {
 		builder := AuthorizationInfoBuilder(responseTypeCode, "clientId", "xyz", nil)
-		if err := builder.Verify(registeredClientEndpoints); err == nil {
-			t.Errorf("wanted an error %v, but didn't get one", InvalidRequest)
-		} else if err.Error() != InvalidRequest {
-			t.Errorf("wanted an error %v, but got %v ", InvalidRequest, err.Error())
-		}
+		err := builder.Verify(registeredClientEndpoints)
+		assertError(t, err, &authorizationError{errors.New(InvalidRequest), state})
 	})
 
 	// https://tools.ietf.org/html/rfc6749#section-3.1.2
 	t.Run("request with redirect uri contains fragment component", func(t *testing.T) {
 		badRedirectUriParam, _ := url.ParseRequestURI(registeredClientEndpoints[0] + "#fragment")
 		builder := AuthorizationInfoBuilder(responseTypeCode, "clientId", "xyz", badRedirectUriParam)
-		if err := builder.Verify(registeredClientEndpoints); err == nil {
-			t.Errorf("wanted an error %v, but didn't get one", InvalidRequest)
-		} else if err.Error() != InvalidRequest {
-			t.Errorf("wanted an error %v, but got %v ", InvalidRequest, err.Error())
-		}
+		err := builder.Verify(registeredClientEndpoints)
+		assertError(t, err, &authorizationError{errors.New(InvalidRequest), state})
 	})
 
 	// https://tools.ietf.org/html/rfc6749#section-3.1.2.3
@@ -80,11 +81,8 @@ func TestInvalidAuthorizationRequest(t *testing.T) {
 	t.Run("request with unregistered redirect uri", func(t *testing.T) {
 		badRedirectUriParam, _ := url.ParseRequestURI("https://example.com/bad")
 		builder := AuthorizationInfoBuilder(responseTypeCode, "clientId", "xyz", badRedirectUriParam)
-		if err := builder.Verify(registeredClientEndpoints); err == nil {
-			t.Errorf("wanted an error %v, but didn't get one", InvalidRequest)
-		} else if err.Error() != InvalidRequest {
-			t.Errorf("wanted an error %v, but got %v ", InvalidRequest, err.Error())
-		}
+		err := builder.Verify(registeredClientEndpoints)
+		assertError(t, err, &authorizationError{errors.New(InvalidRequest), state})
 	})
 }
 

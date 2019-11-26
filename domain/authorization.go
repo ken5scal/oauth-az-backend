@@ -110,19 +110,19 @@ func (builder *authorizationBuilder) formRedirectionEndpoint() string {
 	return builder.redirectUri.Scheme + "://" + builder.redirectUri.Host + builder.redirectUri.Path
 }
 
-func (builder *authorizationBuilder) Verify(clientRedirectEPs []string) error {
+func (builder *authorizationBuilder) Verify(clientRedirectEPs []string) *authorizationError {
 	if builder.clientId == "" || builder.redirectUri == nil || builder.state == "" {
-		return authorizationError{error: errors.New(InvalidRequest), state: builder.state}
+		return &authorizationError{error: errors.New(InvalidRequest), state: builder.state}
 	}
 
 	if strings.Contains(builder.redirectUri.String(), "#") {
 		// the redirection endpoint must not include a fragement component
 		// https://tools.ietf.org/html/rfc6749#section-3.1.2
-		return authorizationError{error: errors.New(InvalidRequest), state: builder.state}
+		return &authorizationError{error: errors.New(InvalidRequest), state: builder.state}
 	}
 
 	if err := isValidType(builder.responseType); err != nil {
-		return authorizationError{error: err, state: builder.state}
+		return &authorizationError{error: err, state: builder.state}
 	}
 
 	// Redirect Endpoints can have multiple values
@@ -131,7 +131,7 @@ func (builder *authorizationBuilder) Verify(clientRedirectEPs []string) error {
 			break
 		}
 
-		return authorizationError{error: errors.New(InvalidRequest), state: builder.state}
+		return &authorizationError{error: errors.New(InvalidRequest), state: builder.state}
 	}
 
 	return nil
