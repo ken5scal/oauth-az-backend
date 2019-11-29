@@ -89,7 +89,7 @@ func main() {
 	// URI  MUST NOT include a fragment component.
 	// MUST support the use of the HTTP "GET" method
 	r.HandleFunc("/authorize", handler.NewAuthzHandler(authzRepo).RequestAuthz).Methods(http.MethodGet)
-	r.HandleFunc("/token", handler.NewTokenHandler(tokenRepo).RequestToken)
+	r.HandleFunc("/token", handler.NewTokenHandler(tokenRepo).RequestToken).Methods(http.MethodPost)
 	srv := &http.Server{
 		Addr:    addr + ":" + port,
 		Handler: handlers.CORS(allowedOrigins, allowedHeaders, allowedMethods)(r),
