@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"github.com/ken5scal/oauth-az/domain"
 	"net/http"
 	"net/http/httptest"
@@ -45,7 +46,7 @@ func TestHandlingInvalidAuthorizationRequest(t *testing.T) {
 
 		server.ServeHTTP(response, request)
 		if response.Code != http.StatusBadRequest {
-			t.Errorf("wanted http statsu code %v, but got %v", http.StatusBadRequest, response.Code)
+			t.Errorf("wanted http status code %v, but got %v", http.StatusBadRequest, response.Code)
 		}
 		if response.Body == nil {
 			t.Error("wanted an error in response, but got none")
@@ -64,6 +65,17 @@ func TestHandlingInvalidAuthorizationRequest(t *testing.T) {
 		}
 		if response.Body == nil {
 			t.Error("wanted an error in response, but got none")
+		}
+	})
+
+	t.Run("request with duplicated parameters", func(t *testing.T) {
+		request.URL.RawQuery = request.URL.RawQuery + "&" + authzRequestParamRedirectUri + "=fakeuri"
+		fmt.Println(request.URL.RawQuery)
+		response = httptest.NewRecorder()
+		server.ServeHTTP(response, request)
+		fmt.Println(response.Code)
+		if response.Code != http.StatusBadRequest {
+			t.Errorf("wanted http status code %v, but got %v", http.StatusBadRequest, response.Code)
 		}
 	})
 }
