@@ -143,9 +143,11 @@ func (r *DummyRepository) GetAuthzInfoByID(authzInfoID string) (*domain.Authoriz
 }
 
 func (r *DummyRepository) GetClientInfoByID(authzInfoID string) (*domain.AuthorizationInfo, error) {
-	azInfo := &domain.AuthorizationInfo{RedirectUri: redirectUri}
+	u, _ := url.Parse(redirectUri)
+	fu, _ := url.Parse("fake" + redirectUri)
+	azInfo := &domain.AuthorizationInfo{RedirectUri: u}
 	if returnFakeUri {
-		azInfo.RedirectUri = "fake" + redirectUri
+		azInfo.RedirectUri = fu
 		return azInfo, nil
 	}
 	return azInfo, nil

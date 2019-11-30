@@ -18,7 +18,9 @@ var builder = tokenBuilder{
 	authzInfo: &AuthorizationInfo{
 		AuthzCode:      exampleCode,
 		RedirectUri:    exampleUrl,
-		CodeExpiration: time.Now().Local().Add(time.Minute * time.Duration(codeExpirationDuration))},
+		CodeExpiration: time.Now().Local().Add(time.Minute * time.Duration(codeExpirationDuration)),
+		Scope:          "openid profile email phone",
+	},
 }
 
 func TestTokenRequestWithWrongParameters(t *testing.T) {
@@ -90,14 +92,18 @@ func TestTokenRequest(t *testing.T) {
 			t.Errorf("wanted a token type, but didn't get one")
 		}
 
-		if token.expiresIn.Microseconds() == 0 {
+		if token.expiresIn.Nanoseconds() == 0 {
 			t.Errorf("wanted token lifetime, but didn't get one")
 		}
 
-		if token.refreshToken == "" {
-			t.Errorf("wanted a refresh token, but didn't get one")
-		}
+		// refresh token can be an optional, even in FAPI security profile
+		//if token.refreshToken == "" {
+		//	t.Errorf("wanted a refresh token, but didn't get one")
+		//}
 
+		// rfc wise, this can be empty if scope is identical to the one requested by the client
+		// but for simplicity, this code made it mandatory
+		// https://tools.ietf.org/html/rfc6749#section-4.1.3
 		if token.scope == "" {
 			t.Errorf("wanted a scope, but didn't get one")
 		}

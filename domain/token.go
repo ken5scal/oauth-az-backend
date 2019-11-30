@@ -1,6 +1,8 @@
 package domain
 
 import (
+	"crypto/rand"
+	"encoding/base64"
 	"github.com/pkg/errors"
 	"net/url"
 	"time"
@@ -60,14 +62,26 @@ func (builder *tokenBuilder) Verify() error {
 }
 
 func (builder *tokenBuilder) Build() *Token {
-	return &Token{}
+	// "minimum of 128 bits of entropy where the probability of an attacker guessing the generated token is less than or equal to 2^(-160) as per [RFC6749] section 10.10"
+	//  https://bitbucket.org/openid/fapi/pull-requests/45/bring-access-token-requirements-inline/diff
+	// calculated by https://8gwifi.org/passwdgen.jsp
+	// Don't use symboles, just numbers and letters from 22 ~ 26
+	b := make([]byte, 26)
+	rand.Read(b)
+	accessToken := base64.StdEncoding.EncodeToString(b)
+	return &Token{
+		accessToken: accessToken,
+		tokenType:   "Bearer", // https://openid.net/specs/openid-connect-core-1_0.html#TokenResponse
+		expiresIn:   time.Duration(3600) * time.Second,
+		scope:       builder.authzInfo.Scope,
+	}
 }
 
 type Token struct {
 	accessToken  string
 	tokenType    string
 	expiresIn    time.Duration
-	refreshToken string
+	refreshToken string // FAPIでも必須ではない
 	scope        string
 }
 
