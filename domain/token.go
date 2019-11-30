@@ -10,20 +10,37 @@ type tokenBuilder struct {
 	grantType   string
 	code        string
 	redirectUri *url.URL
+	authzInfo   *authorization
 }
 
-func NewTokenBuilder(grantType, code string, redirectUri *url.URL) *tokenBuilder {
-	return &tokenBuilder{grantType, code, redirectUri}
+func NewTokenBuilder(grantType, code string, redirectUri *url.URL, authz *authorization) *tokenBuilder {
+	return &tokenBuilder{grantType, code, redirectUri, authz}
 }
 
 func (builder *tokenBuilder) Verify() error {
-	// https://tools.ietf.org/html/rfc6749#section-4.1.3
-	if builder.grantType == "" || builder.code == "" || builder.redirectUri == nil {
+	// Check Logic: https://tools.ietf.org/html/rfc6749#section-4.1.3
+	// Error Types: https://tools.ietf.org/html/rfc6749#section-5.2
+
+	if builder.grantType == "" || builder.code == "" {
 		return errors.New(InvalidRequest)
 	}
 
 	if builder.grantType != "authorization_code" {
 		return errors.New(tokenUnsupportedGrantType)
+	}
+
+	if builder.authzInfo.redirectUri != nil {
+		if builder.redirectUri == nil {
+			return errors.New(InvalidRequest)
+		}
+
+		if builder.redirectUri.String() != builder.authzInfo.redirectUri.String() {
+			return errors.New(tokenInvalidGrant)
+		}
+	}
+
+	if builder.code != builder.authzInfo.code {
+		return errors.New(tokenInvalidGrant)
 	}
 
 	return nil
