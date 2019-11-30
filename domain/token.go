@@ -9,20 +9,33 @@ import (
 type tokenBuilder struct {
 	grantType   string
 	code        string
-	clientId    string
 	redirectUri *url.URL
 }
 
-func NewTokenBuilder(grantType, code, clientId string, redirectUri *url.URL) *tokenBuilder {
-	return &tokenBuilder{grantType, code, clientId, redirectUri}
+func NewTokenBuilder(grantType, code string, redirectUri *url.URL) *tokenBuilder {
+	return &tokenBuilder{grantType, code, redirectUri}
 }
 
 func (builder *tokenBuilder) Verify() error {
-	return errors.New(tokenInvalidRequest)
+	// https://tools.ietf.org/html/rfc6749#section-4.1.3
+	if builder.grantType == "" || builder.code == "" || builder.redirectUri == nil {
+		return errors.New(InvalidRequest)
+	}
+
+	if builder.grantType != "authorization_code" {
+		return errors.New(tokenUnsupportedGrantType)
+	}
+
+	return nil
 }
 
 const (
-	tokenInvalidRequest = "invalid_request"
+	tokenInvalidRequest       = "invalid_request"
+	tokenInvalidClient        = "invalid_client"
+	tokenInvalidGrant         = "invalid_grant"
+	tokenUnauthorizedClient   = "unauthorized_client"
+	tokenUnsupportedGrantType = "unsupported_grant_type"
+	tokenInvalidScope         = "invalid_scope"
 )
 
 type Token struct {

@@ -5,23 +5,32 @@ import (
 	"testing"
 )
 
-var exampleRedirectUri = "https://client.example.com/cb"
 var exampleCode = "SplxlOBeZQQYbYS6WxSbIA"
 var examplegrantType = "authorization_code"
 var exampleClientId = "s6BhdRkqt3"
+var u, _ = url.Parse("https://client.example.com/cb")
 
-func TestInvalidTokenRequest(t *testing.T) {
-	u, _ := url.Parse(exampleRedirectUri)
-	builder := tokenBuilder{grantType: examplegrantType, code: exampleCode, clientId: exampleClientId, redirectUri: u}
+func TestTokenRequestWithWrongParameters(t *testing.T) {
+	builder := tokenBuilder{grantType: "not_authorization_code", code: exampleCode, redirectUri: u}
+	wanted := tokenUnsupportedGrantType
+	err := builder.Verify()
+	if err.Error() != tokenUnsupportedGrantType {
+		t.Errorf("wanted an error %v, but got %v", wanted, err.Error())
+	}
+}
+
+func TestTokenRequestWithMissingParameters(t *testing.T) {
+	builder := tokenBuilder{grantType: examplegrantType, code: exampleCode, redirectUri: u}
+	wanted := tokenInvalidRequest
 
 	assertError := func(t *testing.T, b tokenBuilder) {
 		err := b.Verify()
 		if err == nil {
-			t.Errorf("wanted an error %v, but didn't get one", tokenInvalidRequest)
+			t.Errorf("wanted an error %v, but didn't get one", wanted)
 		}
 
 		if err.Error() != tokenInvalidRequest {
-			t.Errorf("wanted an error %v, but didn't get one", tokenInvalidRequest)
+			t.Errorf("wanted an error %v, but got %v", wanted, err.Error())
 		}
 	}
 
@@ -37,11 +46,6 @@ func TestInvalidTokenRequest(t *testing.T) {
 
 	t.Run("request with empty redirectUri", func(t *testing.T) {
 		builder.redirectUri = nil
-		assertError(t, builder)
-	})
-
-	t.Run("request with empty clientId", func(t *testing.T) {
-		builder.clientId = ""
 		assertError(t, builder)
 	})
 }
