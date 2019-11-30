@@ -3,48 +3,8 @@ package domain
 import (
 	"github.com/pkg/errors"
 	"net/url"
+	"time"
 )
-
-// domain logic goes here
-type tokenBuilder struct {
-	grantType   string
-	code        string
-	redirectUri *url.URL
-	authzInfo   *authorization
-}
-
-func NewTokenBuilder(grantType, code string, redirectUri *url.URL, authz *authorization) *tokenBuilder {
-	return &tokenBuilder{grantType, code, redirectUri, authz}
-}
-
-func (builder *tokenBuilder) Verify() error {
-	// Check Logic: https://tools.ietf.org/html/rfc6749#section-4.1.3
-	// Error Types: https://tools.ietf.org/html/rfc6749#section-5.2
-
-	if builder.grantType == "" || builder.code == "" {
-		return errors.New(InvalidRequest)
-	}
-
-	if builder.grantType != "authorization_code" {
-		return errors.New(tokenUnsupportedGrantType)
-	}
-
-	if builder.authzInfo.redirectUri != nil {
-		if builder.redirectUri == nil {
-			return errors.New(InvalidRequest)
-		}
-
-		if builder.redirectUri.String() != builder.authzInfo.redirectUri.String() {
-			return errors.New(tokenInvalidGrant)
-		}
-	}
-
-	if builder.code != builder.authzInfo.code {
-		return errors.New(tokenInvalidGrant)
-	}
-
-	return nil
-}
 
 const (
 	tokenInvalidRequest       = "invalid_request"
@@ -55,36 +15,64 @@ const (
 	tokenInvalidScope         = "invalid_scope"
 )
 
-type Token struct {
-	authZInfo string
+// domain logic goes here
+type tokenBuilder struct {
+	grantType   string
+	code        string
+	redirectUri *url.URL
+	authzInfo   *AuthorizationInfo
 }
 
-func NewToken(authzInfo string) *Token {
-	return &Token{authZInfo: authzInfo}
+func NewTokenBuilder(grantType, code string, redirectUri *url.URL, authz *AuthorizationInfo) *tokenBuilder {
+	return &tokenBuilder{grantType, code, redirectUri, authz}
 }
 
-// I think they are business logic...
-type ReturningToken struct {
-}
+func (builder *tokenBuilder) Verify() error {
+	// Check Logic: https://tools.ietf.org/html/rfc6749#section-4.1.3
+	// Error Types: https://tools.ietf.org/html/rfc6749#section-5.2
+	if builder.grantType == "" || builder.code == "" || builder.authzInfo.CodeExpiration.IsZero() {
+		return errors.New(tokenInvalidRequest)
+	}
 
-// I think they are business logic...
-func (t *ReturningToken) Name() string {
-	return ""
-}
+	if builder.grantType != "authorization_code" {
+		return errors.New(tokenUnsupportedGrantType)
+	}
 
-// I think they are business logic...
-func (t *Token) isRevoked() bool {
-	return false
-}
+	if builder.authzInfo.RedirectUri != nil {
+		if builder.redirectUri == nil {
+			return errors.New(tokenInvalidRequest)
+		}
 
-// I think they are business logic...
-func (t *Token) FindClientID() int {
-	return 0
-}
+		if builder.redirectUri.String() != builder.authzInfo.RedirectUri.String() {
+			return errors.New(tokenInvalidGrant)
+		}
+	}
 
-// I think they are business logic...
-func ReturnToken(t *Token) *ReturningToken {
+	if builder.code != builder.authzInfo.AuthzCode {
+		return errors.New(tokenInvalidGrant)
+	}
+
+	if !time.Now().Local().Before(builder.authzInfo.CodeExpiration) {
+		return errors.New(tokenInvalidGrant)
+	}
+
 	return nil
+}
+
+func (builder *tokenBuilder) Build() *Token {
+	return &Token{}
+}
+
+type Token struct {
+	accessToken  string
+	tokenType    string
+	expiresIn    time.Duration
+	refreshToken string
+	scope        string
+}
+
+func NewToken() *Token {
+	return &Token{}
 }
 
 type TokenRepository interface {

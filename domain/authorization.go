@@ -45,7 +45,7 @@ type AuthorizationInfo struct {
 	ClientId        string // should be indexed combined with UserId
 	UserId          string // TODO Change this to *url.URL
 	Scope           []string
-	RedirectUri     string
+	RedirectUri     *url.URL
 	// "minimum of 128 bits of entropy where the probability of an attacker guessing the generated token is less than or equal to 2^(-160) as per [RFC6749] section 10.10"
 	//  https://bitbucket.org/openid/fapi/pull-requests/45/bring-access-token-requirements-inline/diff
 	// calculated by https://8gwifi.org/passwdgen.jsp

@@ -38,16 +38,16 @@ func (c *tokenHandler) RequestToken(w http.ResponseWriter, r *http.Request) {
 	response.ResponseRequestToken(w, c.GetReturnedName())
 }
 
-func (c *tokenHandler) GetTokenByID(tokenID string) (*domain.ReturningToken, error) {
+func (c *tokenHandler) GetTokenByID(tokenID string) (*domain.Token, error) {
 	token, err := c.repo.GetAccessTokenByID(tokenID)
-	return domain.ReturnToken(token), err
+	return token, err
 }
 
 func (c *tokenHandler) GetReturnedName() string {
 	return ""
 }
 
-func (c *tokenHandler) GenerateToken(authZInfor string) (*domain.ReturningToken, error) {
+func (c *tokenHandler) GenerateToken(authZInfor string) (*domain.Token, error) {
 	// Put Business Logic
 	// Check Business logics
 	// Insert to db
@@ -58,7 +58,7 @@ func (c *tokenHandler) GenerateToken(authZInfor string) (*domain.ReturningToken,
 	}
 	r.BeginTransaction()
 
-	token := domain.NewToken(authZInfor)
+	token := &domain.Token{}
 	err := c.repo.Insert(token)
 
 	if err != nil {
@@ -67,5 +67,5 @@ func (c *tokenHandler) GenerateToken(authZInfor string) (*domain.ReturningToken,
 	}
 	r.Commit()
 
-	return domain.ReturnToken(token), err
+	return token, err
 }
