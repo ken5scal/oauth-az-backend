@@ -43,7 +43,7 @@ func isValidType(t string) error {
 type AuthorizationInfo struct {
 	AuthorizationId string // Not id Token, should be indexed in DB
 	ClientId        string // should be indexed combined with UserId
-	UserId          string
+	UserId          string // TODO Change this to *url.URL
 	Scope           []string
 	RedirectUri     string
 	// "minimum of 128 bits of entropy where the probability of an attacker guessing the generated token is less than or equal to 2^(-160) as per [RFC6749] section 10.10"

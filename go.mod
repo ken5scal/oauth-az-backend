@@ -16,7 +16,7 @@ require (
 	github.com/onsi/ginkgo v1.8.0 // indirect
 	github.com/onsi/gomega v1.5.0 // indirect
 	github.com/pelletier/go-toml v1.4.0
-	github.com/pkg/errors v0.8.1 // indirect
+	github.com/pkg/errors v0.8.1
 	github.com/rubenv/sql-migrate v0.0.0-20190618074426-f4d34eae5a5c // indirect
 	github.com/spf13/cobra v0.0.5 // indirect
 	github.com/spf13/viper v1.4.0 // indirect

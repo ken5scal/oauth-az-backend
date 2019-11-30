@@ -1,6 +1,30 @@
 package domain
 
+import (
+	"github.com/pkg/errors"
+	"net/url"
+)
+
 // domain logic goes here
+type tokenBuilder struct {
+	grantType   string
+	code        string
+	clientId    string
+	redirectUri *url.URL
+}
+
+func NewTokenBuilder(grantType, code, clientId string, redirectUri *url.URL) *tokenBuilder {
+	return &tokenBuilder{grantType, code, clientId, redirectUri}
+}
+
+func (builder *tokenBuilder) Verify() error {
+	return errors.New(tokenInvalidRequest)
+}
+
+const (
+	tokenInvalidRequest = "invalid_request"
+)
+
 type Token struct {
 	authZInfo string
 }
