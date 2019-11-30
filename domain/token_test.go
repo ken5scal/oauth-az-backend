@@ -11,11 +11,11 @@ var examplegrantType = "authorization_code"
 var exampleClientId = "s6BhdRkqt3"
 
 func TestInvalidTokenRequest(t *testing.T) {
-	tokenBuilder := tokenBuilder{}
+	u, _ := url.Parse(exampleRedirectUri)
+	builder := tokenBuilder{grantType: examplegrantType, code: exampleCode, clientId: exampleClientId, redirectUri: u}
 
-	t.Run("request with empty grantType", func(t *testing.T) {
-		tokenBuilder.grantType = examplegrantType
-		err := tokenBuilder.Verify()
+	assertError := func(t *testing.T, b tokenBuilder) {
+		err := b.Verify()
 		if err == nil {
 			t.Errorf("wanted an error %v, but didn't get one", tokenInvalidRequest)
 		}
@@ -23,29 +23,25 @@ func TestInvalidTokenRequest(t *testing.T) {
 		if err.Error() != tokenInvalidRequest {
 			t.Errorf("wanted an error %v, but didn't get one", tokenInvalidRequest)
 		}
+	}
+
+	t.Run("request with empty grantType", func(t *testing.T) {
+		builder.grantType = ""
+		assertError(t, builder)
 	})
 
 	t.Run("request with empty code", func(t *testing.T) {
-		tokenBuilder.code = exampleCode
-		err := tokenBuilder.Verify()
-		if err.Error() != tokenInvalidRequest {
-			t.Errorf("wanted an error %v, but didn't get one", tokenInvalidRequest)
-		}
+		builder.code = ""
+		assertError(t, builder)
 	})
 
 	t.Run("request with empty redirectUri", func(t *testing.T) {
-		tokenBuilder.redirectUri, _ = url.Parse(exampleRedirectUri)
-		err := tokenBuilder.Verify()
-		if err.Error() != tokenInvalidRequest {
-			t.Errorf("wanted an error %v, but didn't get one", tokenInvalidRequest)
-		}
+		builder.redirectUri = nil
+		assertError(t, builder)
 	})
 
 	t.Run("request with empty clientId", func(t *testing.T) {
-		tokenBuilder.clientId = exampleClientId
-		err := tokenBuilder.Verify()
-		if err.Error() != tokenInvalidRequest {
-			t.Errorf("wanted an error %v, but didn't get one", tokenInvalidRequest)
-		}
+		builder.clientId = ""
+		assertError(t, builder)
 	})
 }
