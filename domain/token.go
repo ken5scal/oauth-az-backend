@@ -22,17 +22,27 @@ type tokenBuilder struct {
 	grantType   string
 	code        string
 	redirectUri *url.URL
+	scope       []string
 	authzInfo   *AuthorizationInfo
 }
 
 func NewTokenBuilder(grantType, code string, redirectUri *url.URL, authz *AuthorizationInfo) *tokenBuilder {
-	return &tokenBuilder{grantType, code, redirectUri, authz}
+	return &tokenBuilder{
+		grantType:   grantType,
+		code:        code,
+		redirectUri: redirectUri,
+		authzInfo:   authz}
+}
+
+func (builder *tokenBuilder) Scope(scope []string) *tokenBuilder {
+	builder.scope = scope
+	return builder
 }
 
 func (builder *tokenBuilder) Verify() error {
 	// Check Logic: https://tools.ietf.org/html/rfc6749#section-4.1.3
 	// Error Types: https://tools.ietf.org/html/rfc6749#section-5.2
-	if builder.grantType == "" || builder.code == "" || builder.authzInfo.CodeExpiration.IsZero() {
+	if builder.grantType == "" || builder.code == "" {
 		return errors.New(tokenInvalidRequest)
 	}
 
@@ -61,6 +71,27 @@ func (builder *tokenBuilder) Verify() error {
 	return nil
 }
 
+// check whether scope in authorization request and scope in token response has same value
+func (builder *tokenBuilder) hasSameScope() bool {
+	if len(builder.scope) != len(builder.authzInfo.Scope) {
+		return false
+	}
+
+	for _, v := range builder.scope {
+		for k, av := range builder.authzInfo.Scope {
+			if v == av {
+				break
+			}
+
+			if len(builder.authzInfo.Scope) == k+1 {
+				return false
+			}
+		}
+	}
+
+	return true
+}
+
 func (builder *tokenBuilder) Build() *Token {
 	// "minimum of 128 bits of entropy where the probability of an attacker guessing the generated token is less than or equal to 2^(-160) as per [RFC6749] section 10.10"
 	//  https://bitbucket.org/openid/fapi/pull-requests/45/bring-access-token-requirements-inline/diff
@@ -69,12 +100,19 @@ func (builder *tokenBuilder) Build() *Token {
 	b := make([]byte, 26)
 	rand.Read(b)
 	accessToken := base64.StdEncoding.EncodeToString(b)
-	return &Token{
+	token := &Token{
 		accessToken: accessToken,
 		tokenType:   "Bearer", // https://openid.net/specs/openid-connect-core-1_0.html#TokenResponse
 		expiresIn:   time.Duration(3600) * time.Second,
-		scope:       builder.authzInfo.Scope,
 	}
+
+	// https://tools.ietf.org/html/rfc6749#section-5.1
+	// if not identical to the scope requested by the client in authz request, it's required
+	if !builder.hasSameScope() {
+		token.scope = builder.scope
+	}
+
+	return token
 }
 
 type Token struct {
@@ -82,7 +120,7 @@ type Token struct {
 	tokenType    string
 	expiresIn    time.Duration
 	refreshToken string // FAPIでも必須ではない
-	scope        string
+	scope        []string
 }
 
 func NewToken() *Token {

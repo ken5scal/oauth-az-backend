@@ -20,6 +20,29 @@ const (
 
 	responseTypeCode        = "code"
 	responseTypeCodeIdToken = "code id_token"
+
+	openIdScope  = "openid"
+	profileScope = "profile"
+	emailScope   = "email"
+	addressScope = "address"
+	phoneScope   = "phone"
+	offlineScope = "offline_access"
+
+	// https://bitbucket.org/openid/fapi/src/master/Financial_API_WD_004.md?at=master&fileviewer=file-view-default
+	accountFapiScope    = "rAccount"
+	customerFapiScope   = "rCustomer"
+	imageFapiScope      = "rImage"
+	stmtFapiScope       = "rStatement"
+	transctionFapiScope = "rTransaction"
+
+	// https://bitbucket.org/openid/fapi/src/master/Financial_API_WD_005.md?at=master&fileviewer=file-view-default
+	transferFapiScope = "wTransfer"
+
+	//openBanking
+	// https://openbanking.atlassian.net/wiki/spaces/DZ/pages/1000702294/Read+Write+Data+API+Specification+-+v3.1.1
+	accountObiScope      = "accounts"
+	paymentObiScope      = "payments"
+	fundsConfirmObiScope = "fundsconfirmations"
 )
 
 func isValidType(t string) error {
@@ -44,7 +67,7 @@ type AuthorizationInfo struct {
 	AuthorizationId string // Not id Token, should be indexed in DB
 	ClientId        string // should be indexed combined with UserId
 	UserId          string // TODO Change this to *url.URL
-	Scope           string
+	Scope           []string
 	RedirectUri     *url.URL
 	// "minimum of 128 bits of entropy where the probability of an attacker guessing the generated token is less than or equal to 2^(-160) as per [RFC6749] section 10.10"
 	//  https://bitbucket.org/openid/fapi/pull-requests/45/bring-access-token-requirements-inline/diff
