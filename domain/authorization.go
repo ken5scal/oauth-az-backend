@@ -10,48 +10,98 @@ import (
 )
 
 const (
-	InvalidRequest             = "invalid_request"
-	ResponseUnauthorizedClient = "unauthorized_client"
-	AccessDenied               = "access_denied"
-	UnsupportedResponseType    = "unsupported_response_type"
-	InvalidScope               = "invalid_scope"
-	ServerError                = "server_error"
-	TemporarilyUnavailable     = "temporarily_unavailable"
+	authzInvalidRequest             = "invalid_request"
+	authzResponseUnauthorizedClient = "unauthorized_client"
+	authzAccessDenied               = "access_denied"
+	authzUnsupportedResponseType    = "unsupported_response_type"
+	authzInvalidScope               = "invalid_scope"
+	authzServerError                = "server_error"
+	authzTemporarilyUnavailable     = "temporarily_unavailable"
 
 	responseTypeCode        = "code"
 	responseTypeCodeIdToken = "code id_token"
-
-	openIdScope  = "openid"
-	profileScope = "profile"
-	emailScope   = "email"
-	addressScope = "address"
-	phoneScope   = "phone"
-	offlineScope = "offline_access"
-
-	// https://bitbucket.org/openid/fapi/src/master/Financial_API_WD_004.md?at=master&fileviewer=file-view-default
-	accountFapiScope    = "rAccount"
-	customerFapiScope   = "rCustomer"
-	imageFapiScope      = "rImage"
-	stmtFapiScope       = "rStatement"
-	transctionFapiScope = "rTransaction"
-
-	// https://bitbucket.org/openid/fapi/src/master/Financial_API_WD_005.md?at=master&fileviewer=file-view-default
-	transferFapiScope = "wTransfer"
-
-	//openBanking
-	// https://openbanking.atlassian.net/wiki/spaces/DZ/pages/1000702294/Read+Write+Data+API+Specification+-+v3.1.1
-	accountObiScope      = "accounts"
-	paymentObiScope      = "payments"
-	fundsConfirmObiScope = "fundsconfirmations"
 )
+
+type AuthzScope int
+
+const (
+	// OIDC Scope
+	openIdScope AuthzScope = iota
+	profileScope
+	emailScope
+	addressScope
+	phoneScope
+	offlineScope
+
+	// FAPI Read Profile Scope
+	// https://bitbucket.org/openid/fapi/src/master/Financial_API_WD_004.md?at=master&fileviewer=file-view-default
+	accountFapiScope
+	customerFapiScope
+	imageFapiScope
+	stmtFapiScope
+	transctionFapiScope
+
+	// FAPI Write + Read Profile Scope
+	// https://bitbucket.org/openid/fapi/src/master/Financial_API_WD_005.md?at=master&fileviewer=file-view-default
+	transferFapiScope
+
+	// OpenBanking Scope
+	// https://openbanking.atlassian.net/wiki/spaces/DZ/pages/1000702294/Read+Write+Data+API+Specification+-+v3.1.1
+	accountObiScope
+	paymentObiScope
+	fundsConfirmObiScope
+)
+
+var authzScopes = [...]string{
+	"openid",
+	"profile",
+	"email",
+	"address",
+	"phone",
+	"offline_access",
+	"rAccount",
+	"rCustomer",
+	"rImage",
+	"rStatement",
+	"rTransaction",
+	"wTransfer",
+	"accounts",
+	"payments",
+	"fundsconfirmations",
+}
+
+func (scope AuthzScope) String() string {
+	return authzScopes[scope]
+}
+
+// Check scopes in request is one that are supported
+func areScopesSupported(scopes []string) bool {
+	if len(authzScopes) < len(scopes) {
+		return false
+	}
+
+	for _, scope := range scopes {
+		for k, s := range authzScopes {
+			if s == scope {
+				break
+			}
+
+			if k+1 == len(authzScopes) {
+				return false
+			}
+		}
+	}
+
+	return true
+}
 
 func isValidType(t string) error {
 	if t == "" {
-		return errors.New(InvalidRequest)
+		return errors.New(authzInvalidRequest)
 	}
 
 	if t != responseTypeCode && t != responseTypeCodeIdToken {
-		return errors.New(UnsupportedResponseType)
+		return errors.New(authzUnsupportedResponseType)
 	}
 
 	return nil
@@ -87,7 +137,7 @@ type authorizationBuilder struct {
 	responseType string
 	clientId     string
 	redirectUri  *url.URL
-	scope        string
+	scope        []string
 	state        string
 }
 
@@ -118,7 +168,7 @@ func AuthorizationInfoBuilder(responseType, clientId, state string, redirect *ur
 	}
 }
 
-func (builder *authorizationBuilder) Scope(scope string) *authorizationBuilder {
+func (builder *authorizationBuilder) Scope(scope []string) *authorizationBuilder {
 	builder.scope = scope
 	return builder
 }
@@ -135,13 +185,13 @@ func (builder *authorizationBuilder) formRedirectionEndpoint() string {
 
 func (builder *authorizationBuilder) Verify(clientRedirectEPs []string) *authorizationError {
 	if builder.clientId == "" || builder.redirectUri == nil || builder.state == "" {
-		return &authorizationError{error: errors.New(InvalidRequest), state: builder.state}
+		return &authorizationError{error: errors.New(authzInvalidRequest), state: builder.state}
 	}
 
 	if strings.Contains(builder.redirectUri.String(), "#") {
 		// the redirection endpoint must not include a fragement component
 		// https://tools.ietf.org/html/rfc6749#section-3.1.2
-		return &authorizationError{error: errors.New(InvalidRequest), state: builder.state}
+		return &authorizationError{error: errors.New(authzInvalidRequest), state: builder.state}
 	}
 
 	if err := isValidType(builder.responseType); err != nil {
@@ -154,7 +204,11 @@ func (builder *authorizationBuilder) Verify(clientRedirectEPs []string) *authori
 			break
 		}
 
-		return &authorizationError{error: errors.New(InvalidRequest), state: builder.state}
+		return &authorizationError{error: errors.New(authzInvalidRequest), state: builder.state}
+	}
+
+	if !areScopesSupported(builder.scope) {
+		return &authorizationError{error: errors.New(authzInvalidScope), state: builder.state}
 	}
 
 	return nil

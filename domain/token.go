@@ -68,6 +68,10 @@ func (builder *tokenBuilder) Verify() error {
 		return errors.New(tokenInvalidGrant)
 	}
 
+	if !areScopesSupported(builder.scope) {
+		return errors.New(tokenInvalidScope)
+	}
+
 	return nil
 }
 

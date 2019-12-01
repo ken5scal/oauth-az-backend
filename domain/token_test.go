@@ -12,7 +12,7 @@ var exampleCode = "SplxlOBeZQQYbYS6WxSbIA"
 var examplegrantType = "authorization_code"
 var exampleClientId = "s6BhdRkqt3"
 var exampleUrl, _ = url.Parse("https://client.example.com/cb")
-var exampleScope = []string{"openid", "profile", "email", "phone"}
+var exampleScope = []string{openIdScope.String(), profileScope.String(), emailScope.String(), phoneScope.String()}
 var b = tokenBuilder{}
 
 func initBuilder() tokenBuilder {
@@ -65,7 +65,7 @@ func TestTokenRequestWithWrongParameters(t *testing.T) {
 
 	t.Run("request with different scope", func(t *testing.T) {
 		b = initBuilder()
-		b.scope = append(b.authzInfo.Scope, "user")
+		b.scope = append(b.authzInfo.Scope, "invalid-scope")
 		fmt.Println(b.authzInfo.CodeExpiration.String())
 		assertTokenRequestVerifyError(t, b, tokenInvalidScope)
 	})
@@ -124,10 +124,9 @@ func TestTokenRequest(t *testing.T) {
 
 	t.Run("token request with no scope specified in authz request", func(t *testing.T) {
 		b = initBuilder()
-		assertNoTokenRequestError(t, b)
-
-		newScope := append(b.authzInfo.Scope, "new-scope")
+		newScope := append(b.authzInfo.Scope, transctionFapiScope.String())
 		token := b.Scope(newScope).Build()
+		assertNoTokenRequestError(t, b)
 
 		if len(token.scope) == 0 {
 			t.Errorf("wanted scope %v, but got none", token.scope)
@@ -142,7 +141,8 @@ func TestTokenRequest(t *testing.T) {
 func TestScopeDifference(t *testing.T) {
 	t.Run("token request with scope in random order", func(t *testing.T) {
 		b = initBuilder()
-		b.scope = []string{"profile", "email", "phone", "openid"}
+		b.scope = []string{profileScope.String(), emailScope.String(), phoneScope.String(), openIdScope.String()}
+		b.authzInfo.Scope = []string{emailScope.String(), openIdScope.String(), profileScope.String(), phoneScope.String()}
 		if !b.hasSameScope() {
 			t.Errorf("expect to be right")
 		}
@@ -150,7 +150,7 @@ func TestScopeDifference(t *testing.T) {
 
 	t.Run("token request with scope with different length", func(t *testing.T) {
 		b = initBuilder()
-		b.scope = append(b.authzInfo.Scope, "user")
+		b.scope = append(b.authzInfo.Scope, transctionFapiScope.String())
 		if b.hasSameScope() {
 			t.Errorf("expect to be wrong")
 		}
@@ -158,7 +158,7 @@ func TestScopeDifference(t *testing.T) {
 
 	t.Run("token request with scope with different values", func(t *testing.T) {
 		b = initBuilder()
-		b.scope = []string{"profile", "fake-email", "phone", "openid"}
+		b.scope = []string{profileScope.String(), transctionFapiScope.String(), phoneScope.String(), openIdScope.String()}
 		if b.hasSameScope() {
 			t.Errorf("expect to be wrong")
 		}
